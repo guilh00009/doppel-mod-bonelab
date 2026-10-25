@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using BoneLib;
-using Il2CppInterop.Runtime.InteropTypes;
 using Portals.MonoBehaviours;
 using UnityEngine;
 
@@ -72,20 +71,20 @@ public static class PortalWays
 	{
 		foreach (Portal item in UnityEngine.Object.FindObjectsOfType<Portal>())
 		{
-			if (!((UnityEngine.Object)(object)item == null) && ((Component)(object)item).gameObject.activeInHierarchy)
+			if (!(item == null) && item.gameObject.activeInHierarchy)
 			{
 				Portal otherPortal = item.OtherPortal;
-				if (!((UnityEngine.Object)(object)otherPortal == null) && ((Component)(object)otherPortal).gameObject.activeInHierarchy)
+				if (!(otherPortal == null) && otherPortal.gameObject.activeInHierarchy)
 				{
 					ways.Add(new Way
 					{
-						inAt = ((Component)(object)item).transform.position,
-						inOpen = Open(((Component)(object)item).transform),
-						outAt = ((Component)(object)otherPortal).transform.position,
-						outOpen = Open(((Component)(object)otherPortal).transform),
-						id = ((Il2CppObjectBase)(object)item).Pointer,
-						portal = (Component)(object)item,
-						other = (Component)(object)otherPortal
+						inAt = item.transform.position,
+						inOpen = Open(item.transform),
+						outAt = otherPortal.transform.position,
+						outOpen = Open(otherPortal.transform),
+						id = item.Pointer,
+						portal = item,
+						other = otherPortal
 					});
 				}
 			}

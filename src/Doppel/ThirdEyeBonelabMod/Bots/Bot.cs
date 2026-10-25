@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using BoneLib;
-using Il2CppInterop.Runtime.InteropTypes;
 using Il2CppSLZ.Data;
 using Il2CppSLZ.Marrow;
 using Il2CppSLZ.Marrow.AI;
@@ -18512,21 +18511,21 @@ public class Bot
 	{
 		state = "";
 		Transform head = Head;
-		Portal val = ((portalWay.portal != null) ? ((Il2CppObjectBase)portalWay.portal).TryCast<Portal>() : null);
-		Portal val2 = ((portalWay.other != null) ? ((Il2CppObjectBase)portalWay.other).TryCast<Portal>() : null);
-		if (head == null || (UnityEngine.Object)(object)val == null || (UnityEngine.Object)(object)val2 == null)
+		Portal portal = ((portalWay.portal != null) ? portalWay.portal.TryCast<Portal>() : null);
+		Portal portal2 = ((portalWay.other != null) ? portalWay.other.TryCast<Portal>() : null);
+		if (head == null || portal == null || portal2 == null)
 		{
 			state = "the portal is gone";
 			return false;
 		}
-		Vector3 vector = ((Component)(object)val).transform.InverseTransformPoint(head.position);
-		Vector2 vector2 = val.Size * 0.5f;
+		Vector3 vector = portal.transform.InverseTransformPoint(head.position);
+		Vector2 vector2 = portal.Size * 0.5f;
 		bool flag = Mathf.Abs(vector.x) <= vector2.x && Mathf.Abs(vector.y) <= vector2.y;
 		TeleportableRigManager component = rig.GetComponent<TeleportableRigManager>();
-		state = "head " + vector.ToString("0.00") + " to it, its half size " + vector2.ToString("0.00") + (((UnityEngine.Object)(object)component == null) ? ", its body is not one the portals know" : (", bodies " + ((Teleportable)component).Bodies.Count + (((Teleportable)component).HasPortals ? ", in a portal" : ", in none")));
-		if ((UnityEngine.Object)(object)component != null && flag && vector.z < -0.02f)
+		state = "head " + vector.ToString("0.00") + " to it, its half size " + vector2.ToString("0.00") + ((component == null) ? ", its body is not one the portals know" : (", bodies " + component.Bodies.Count + (component.HasPortals ? ", in a portal" : ", in none")));
+		if (component != null && flag && vector.z < -0.02f)
 		{
-			((Teleportable)component).Teleport(val, val2);
+			component.Teleport(portal, portal2);
 			state += "; carried by the portal on being asked";
 			return true;
 		}
