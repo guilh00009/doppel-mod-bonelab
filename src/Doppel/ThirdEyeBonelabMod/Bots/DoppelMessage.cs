@@ -7,10 +7,10 @@ public class DoppelMessage : ModuleMessageHandler
 {
 	protected override void OnHandleMessage(ReceivedMessage received)
 	{
-		if (((ReceivedMessage)(ref received)).Sender.HasValue)
+		if (received.Sender.HasValue)
 		{
-			DoppelData doppelData = ((ReceivedMessage)(ref received)).ReadData<DoppelData>();
-			NetBots.Receive(((ReceivedMessage)(ref received)).Sender.Value, doppelData.bytes);
+			DoppelData doppelData = received.ReadData<DoppelData>();
+			NetBots.Receive(received.Sender.Value, doppelData.bytes);
 		}
 	}
 }

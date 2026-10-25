@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using BoneLib;
-using Il2CppInterop.Runtime.InteropTypes;
 using Il2CppSLZ.Marrow;
 using MelonLoader;
 using UnityEngine;
@@ -138,21 +137,21 @@ public static class ClimbMoves
 		}
 		List<Climb> list = new List<Climb>(climbs);
 		list.Sort((Climb a, Climb b) => Mathf.Abs(a.height - height).CompareTo(Mathf.Abs(b.height - height)));
-		return list[Random.Range(0, Mathf.Min(3, list.Count))];
+		return list[UnityEngine.Random.Range(0, Mathf.Min(3, list.Count))];
 	}
 
 	public static void OnGrip(Grip grip, Hand hand, bool on)
 	{
-		if (!Learning || (Object)(object)grip == (Object)null || (Object)(object)hand == (Object)null)
+		if (!Learning || grip == null || hand == null)
 		{
 			return;
 		}
 		RigManager rigManager = Player.RigManager;
-		if ((Object)(object)rigManager == (Object)null || (Object)(object)rigManager.worldGrip == (Object)null || ((Il2CppObjectBase)(object)grip).Pointer != ((Il2CppObjectBase)(object)rigManager.worldGrip).Pointer)
+		if (rigManager == null || rigManager.worldGrip == null || grip.Pointer != rigManager.worldGrip.Pointer)
 		{
 			return;
 		}
-		int num = ((!((Object)(object)hand == (Object)(object)Player.LeftHand)) ? (((Object)(object)hand == (Object)(object)Player.RightHand) ? 1 : (-1)) : 0);
+		int num = ((!(hand == Player.LeftHand)) ? ((hand == Player.RightHand) ? 1 : (-1)) : 0);
 		if (num < 0)
 		{
 			return;
@@ -171,12 +170,12 @@ public static class ClimbMoves
 	private static void Begin(Hand hand)
 	{
 		Transform head = Player.Head;
-		if (!((Object)(object)head == (Object)null))
+		if (!(head == null))
 		{
-			edge = ((Component)hand).transform.position;
+			edge = hand.transform.position;
 			facing = Quaternion.Euler(0f, Recorder.Yaw(head.forward), 0f);
 			PhysicsRig physicsRig = Player.PhysicsRig;
-			float num = (((Object)(object)physicsRig != (Object)null && (Object)(object)((Rig)physicsRig).centerOfPressure != (Object)null) ? ((Rig)physicsRig).centerOfPressure.position.y : (head.position.y - 1.6f));
+			float num = ((physicsRig != null && physicsRig.centerOfPressure != null) ? physicsRig.centerOfPressure.position.y : (head.position.y - 1.6f));
 			taking = new Climb
 			{
 				height = edge.y - num
@@ -201,7 +200,7 @@ public static class ClimbMoves
 			return;
 		}
 		OpenControllerRig controllerRig = Player.ControllerRig;
-		if ((Object)(object)controllerRig == (Object)null || (Object)(object)controllerRig.headset == (Object)null)
+		if (controllerRig == null || controllerRig.headset == null)
 		{
 			return;
 		}
@@ -213,8 +212,8 @@ public static class ClimbMoves
 			{
 				t = num,
 				head = P(pose * Bot.Pose.Of(controllerRig.headset)),
-				left = P(pose * Bot.Pose.Of(((Component)((ControllerRig)controllerRig).leftController).transform)),
-				right = P(pose * Bot.Pose.Of(((Component)((ControllerRig)controllerRig).rightController).transform)),
+				left = P(pose * Bot.Pose.Of(controllerRig.leftController.transform)),
+				right = P(pose * Bot.Pose.Of(controllerRig.rightController.transform)),
 				lh = holding[0],
 				rh = holding[1]
 			});

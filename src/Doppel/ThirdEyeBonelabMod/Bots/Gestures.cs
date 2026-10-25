@@ -29,7 +29,7 @@ public static class Gestures
 	public static void Update()
 	{
 		Transform head = Player.Head;
-		if (!((Object)(object)head == (Object)null))
+		if (!(head == null))
 		{
 			Watch(left, Player.LeftHand, head);
 			Watch(right, Player.RightHand, head);
@@ -38,34 +38,34 @@ public static class Gestures
 
 	private static void Watch(Side side, Hand hand, Transform head)
 	{
-		if ((Object)(object)hand == (Object)null || Time.deltaTime <= 0f)
+		if (hand == null || Time.deltaTime <= 0f)
 		{
 			side.has = false;
 			return;
 		}
-		Vector3 val = head.InverseTransformPoint(((Component)hand).transform.position);
-		Vector3 last = side.last;
-		side.last = val;
+		Vector3 last = head.InverseTransformPoint(hand.transform.position);
+		Vector3 last2 = side.last;
+		side.last = last;
 		if (!side.has)
 		{
 			side.has = true;
 			return;
 		}
-		if (!(val.y > Tuning.F("wave.see.height", -0.15f)) || !(val.z > -0.1f) || !((Object)(object)hand.m_CurrentAttachedGO == (Object)null))
+		if (!(last.y > Tuning.F("wave.see.height", -0.15f)) || !(last.z > -0.1f) || !(hand.m_CurrentAttachedGO == null))
 		{
 			side.turns.Clear();
 			side.way = 0f;
 			return;
 		}
-		float num = (val.x - last.x) / Time.deltaTime;
-		if (Mathf.Abs(num) < Tuning.F("wave.see.speed", 0.5f))
+		float f = (last.x - last2.x) / Time.deltaTime;
+		if (Mathf.Abs(f) < Tuning.F("wave.see.speed", 0.5f))
 		{
 			return;
 		}
-		float num2 = Mathf.Sign(num);
-		if (num2 != side.way)
+		float num = Mathf.Sign(f);
+		if (num != side.way)
 		{
-			side.way = num2;
+			side.way = num;
 			side.turns.Add(Time.time);
 			while (side.turns.Count > 0 && Time.time - side.turns[0] > 1.6f)
 			{

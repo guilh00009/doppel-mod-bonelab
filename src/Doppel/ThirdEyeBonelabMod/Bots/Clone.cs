@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using BoneLib;
-using Il2CppInterop.Runtime.InteropTypes;
 using Il2CppSLZ.Marrow;
 using Il2CppSLZ.Marrow.Interaction;
 using Il2CppSLZ.Marrow.Pool;
-using Il2CppSLZ.Marrow.Warehouse;
 using Il2CppSLZ.VRMK;
 using MelonLoader;
 using UnityEngine;
@@ -249,7 +247,7 @@ public static class Clone
 
 	public static bool Begin(Session s)
 	{
-		if (s.taking != null || (Object)(object)Player.PhysicsRig == (Object)null || (Object)(object)Player.Head == (Object)null || (Object)(object)Player.RigManager == (Object)null)
+		if (s.taking != null || Player.PhysicsRig == null || Player.Head == null || Player.RigManager == null)
 		{
 			return false;
 		}
@@ -261,13 +259,13 @@ public static class Clone
 		s.spawns = 0;
 		s.leftLatch = (s.rightLatch = default(HandInput));
 		s.seat = IntPtr.Zero;
-		Rig physicsRig = (Rig)(object)Player.PhysicsRig;
-		take.startFeet = (((Object)(object)physicsRig.centerOfPressure != (Object)null) ? physicsRig.centerOfPressure.position : (Player.Head.position - Vector3.up * 1.6f));
+		Rig physicsRig = Player.PhysicsRig;
+		take.startFeet = ((physicsRig.centerOfPressure != null) ? physicsRig.centerOfPressure.position : (Player.Head.position - Vector3.up * 1.6f));
 		take.startYaw = Recorder.Yaw(Player.Head.forward);
 		take.avatar = BotRig.AvatarOf(Player.RigManager);
-		Avatar avatar = Player.RigManager.avatar;
-		take.avatarScale = (((Object)(object)avatar != (Object)null) ? ((Component)avatar).transform.localScale : Vector3.one);
-		take.eyes = (((Object)(object)avatar != (Object)null) ? (avatar.eyeHeight * ((Component)avatar).transform.lossyScale.y) : 0f);
+		Il2CppSLZ.VRMK.Avatar avatar = Player.RigManager.avatar;
+		take.avatarScale = ((avatar != null) ? avatar.transform.localScale : Vector3.one);
+		take.eyes = ((avatar != null) ? (avatar.eyeHeight * avatar.transform.lossyScale.y) : 0f);
 		s.wearing = take.avatar;
 		s.taking = take;
 		return true;
@@ -320,10 +318,10 @@ public static class Clone
 		WatchAvatar(s);
 		WatchSeat(s);
 		OpenControllerRig controllerRig = Player.ControllerRig;
-		if ((Object)(object)controllerRig != (Object)null && (Object)(object)((ControllerRig)controllerRig).leftController != (Object)null && (Object)(object)((ControllerRig)controllerRig).rightController != (Object)null)
+		if (controllerRig != null && controllerRig.leftController != null && controllerRig.rightController != null)
 		{
-			Latch(ref s.leftLatch, ((ControllerRig)controllerRig).leftController);
-			Latch(ref s.rightLatch, ((ControllerRig)controllerRig).rightController);
+			Latch(ref s.leftLatch, controllerRig.leftController);
+			Latch(ref s.rightLatch, controllerRig.rightController);
 		}
 		float num = Time.time - s.startedAt;
 		if (num < s.nextFrameAt)
@@ -333,36 +331,36 @@ public static class Clone
 		s.nextFrameAt = num + 1f / 60f;
 		PhysicsRig physicsRig = Player.PhysicsRig;
 		RigManager rigManager = Player.RigManager;
-		if ((Object)(object)controllerRig == (Object)null || (Object)(object)physicsRig == (Object)null || (Object)(object)rigManager == (Object)null || (Object)(object)controllerRig.vrRoot == (Object)null)
+		if (controllerRig == null || physicsRig == null || rigManager == null || controllerRig.vrRoot == null)
 		{
 			return;
 		}
-		Rigidbody val = (((Object)(object)((Rig)physicsRig).m_pelvis != (Object)null) ? ((Component)((Rig)physicsRig).m_pelvis).GetComponent<Rigidbody>() : null);
-		if (!((Object)(object)val == (Object)null))
+		Rigidbody rigidbody = ((physicsRig.m_pelvis != null) ? physicsRig.m_pelvis.GetComponent<Rigidbody>() : null);
+		if (!(rigidbody == null))
 		{
 			Frame frame = default(Frame);
 			frame.t = num;
-			frame.pelvis = val.position;
-			frame.pelvisTurn = val.rotation;
-			frame.pelvisVelocity = val.velocity;
-			frame.pelvisSpin = val.angularVelocity;
+			frame.pelvis = rigidbody.position;
+			frame.pelvisTurn = rigidbody.rotation;
+			frame.pelvisVelocity = rigidbody.velocity;
+			frame.pelvisSpin = rigidbody.angularVelocity;
 			frame.playspace = controllerRig.vrRoot.rotation;
 			frame.head = LocalOf(controllerRig.headset);
-			frame.left = LocalOf(((Component)((ControllerRig)controllerRig).leftController).transform);
-			frame.right = LocalOf(((Component)((ControllerRig)controllerRig).rightController).transform);
-			frame.leftIn = InputOf(((ControllerRig)controllerRig).leftController, ref s.leftLatch);
-			frame.rightIn = InputOf(((ControllerRig)controllerRig).rightController, ref s.rightLatch);
-			frame.aPrimary = ((ControllerRig)controllerRig)._primaryAButton;
-			frame.aSecondary = ((ControllerRig)controllerRig)._secondaryAButton;
+			frame.left = LocalOf(controllerRig.leftController.transform);
+			frame.right = LocalOf(controllerRig.rightController.transform);
+			frame.leftIn = InputOf(controllerRig.leftController, ref s.leftLatch);
+			frame.rightIn = InputOf(controllerRig.rightController, ref s.rightLatch);
+			frame.aPrimary = controllerRig._primaryAButton;
+			frame.aSecondary = controllerRig._secondaryAButton;
 			frame.crouch = rigManager.remapHeptaRig._crouchTarget;
 			frame.feet = rigManager.remapHeptaRig._feetOffset;
 			frame.root = controllerRig.vrRoot.position;
 			Frame item = frame;
 			Seat activeSeat = rigManager.activeSeat;
-			if ((Object)(object)activeSeat != (Object)null)
+			if (activeSeat != null)
 			{
 				item.seated = true;
-				item.seat = Bot.Pose.Of(((Component)activeSeat).transform);
+				item.seat = Bot.Pose.Of(activeSeat.transform);
 			}
 			taking.frames.Add(item);
 		}
@@ -413,8 +411,8 @@ public static class Clone
 		try
 		{
 			RigManager rigManager = Player.RigManager;
-			Seat val = (((Object)(object)rigManager != (Object)null) ? rigManager.activeSeat : null);
-			IntPtr intPtr = (((Object)(object)val != (Object)null) ? ((Il2CppObjectBase)(object)val).Pointer : IntPtr.Zero);
+			Seat seat = ((rigManager != null) ? rigManager.activeSeat : null);
+			IntPtr intPtr = ((seat != null) ? seat.Pointer : IntPtr.Zero);
 			if (intPtr == s.seat)
 			{
 				return;
@@ -424,33 +422,33 @@ public static class Clone
 			{
 				t = Time.time - s.startedAt,
 				kind = Kind.Seat,
-				hand = (((Object)(object)val != (Object)null) ? 1 : 0)
+				hand = ((seat != null) ? 1 : 0)
 			};
-			if ((Object)(object)val != (Object)null)
+			if (seat != null)
 			{
-				Poolee componentInParent = ((Component)val).GetComponentInParent<Poolee>();
-				Transform val2 = (((Object)(object)componentInParent != (Object)null) ? ((Component)componentInParent).transform : ((Component)val).transform.root);
-				@event.barcode = (((Object)(object)componentInParent != (Object)null && (Object)(object)componentInParent.SpawnableCrate != (Object)null) ? ((Scannable)componentInParent.SpawnableCrate).Barcode.ID : "");
-				IntPtr key = (((Object)(object)componentInParent != (Object)null) ? ((Il2CppObjectBase)(object)componentInParent).Pointer : ((Il2CppObjectBase)(object)val2).Pointer);
+				Poolee componentInParent = seat.GetComponentInParent<Poolee>();
+				Transform transform = ((componentInParent != null) ? componentInParent.transform : seat.transform.root);
+				@event.barcode = ((componentInParent != null && componentInParent.SpawnableCrate != null) ? componentInParent.SpawnableCrate.Barcode.ID : "");
+				IntPtr key = ((componentInParent != null) ? componentInParent.Pointer : transform.Pointer);
 				if (!s.things.TryGetValue(key, out var value))
 				{
 					value = s.things.Count;
 					s.things[key] = value;
 				}
-				@event.name = ((Object)val2).name + "||" + value;
-				@event.at = val2.position;
-				@event.turn = val2.rotation;
-				Seat[] array = ((Component)val2).GetComponentsInChildren<Seat>(true);
+				@event.name = transform.name + "||" + value;
+				@event.at = transform.position;
+				@event.turn = transform.rotation;
+				Seat[] array = transform.GetComponentsInChildren<Seat>(includeInactive: true);
 				for (int i = 0; i < array.Length; i++)
 				{
-					if ((Object)(object)array[i] == (Object)(object)val)
+					if (array[i] == seat)
 					{
 						@event.grip = i;
 					}
 				}
 			}
 			s.taking.events.Add(@event);
-			Lab.Event(((s == Lesson) ? "lesson" : "clone") + ": you " + (((Object)(object)val != (Object)null) ? ("sat down in the " + ThingName(@event)) : "got out"));
+			Lab.Event(((s == Lesson) ? "lesson" : "clone") + ": you " + ((seat != null) ? ("sat down in the " + ThingName(@event)) : "got out"));
 		}
 		catch (Exception)
 		{
@@ -460,7 +458,7 @@ public static class Clone
 	private static void WatchAvatar(Session s)
 	{
 		RigManager rigManager = Player.RigManager;
-		if (!((Object)(object)rigManager == (Object)null) && !((Object)(object)rigManager.avatar == (Object)null))
+		if (!(rigManager == null) && !(rigManager.avatar == null))
 		{
 			string text = BotRig.AvatarOf(rigManager);
 			if (!string.IsNullOrEmpty(text) && !(text == s.wearing))
@@ -471,7 +469,7 @@ public static class Clone
 					t = Time.time - s.startedAt,
 					kind = Kind.Avatar,
 					barcode = text,
-					at = ((Component)rigManager.avatar).transform.localScale
+					at = rigManager.avatar.transform.localScale
 				});
 				Lab.Event("clone: avatar " + text);
 			}
@@ -499,39 +497,39 @@ public static class Clone
 	private static void OnSpawn(Session s, Poolee poolee)
 	{
 		Take taking = s.taking;
-		if (taking == null || (Object)(object)poolee == (Object)null || Time.time < SuppressUntil)
+		if (taking == null || poolee == null || Time.time < SuppressUntil)
 		{
 			return;
 		}
 		try
 		{
-			if ((Object)(object)poolee.SpawnableCrate == (Object)null)
+			if (poolee.SpawnableCrate == null)
 			{
 				return;
 			}
-			GameObject gameObject = ((Component)poolee).gameObject;
-			if (IsBody(((Scannable)poolee.SpawnableCrate).Barcode.ID, ((Object)gameObject).name) || (Object)(object)gameObject.GetComponentInChildren<RigManager>(true) != (Object)null || (Object)(object)gameObject.GetComponentInChildren<Rigidbody>() == (Object)null)
+			GameObject gameObject = poolee.gameObject;
+			if (IsBody(poolee.SpawnableCrate.Barcode.ID, gameObject.name) || gameObject.GetComponentInChildren<RigManager>(includeInactive: true) != null || gameObject.GetComponentInChildren<Rigidbody>() == null)
 			{
 				return;
 			}
-			string text = ((Object)gameObject).name.ToLowerInvariant();
-			if (!text.Contains("cartridge") && !text.Contains("casing") && !text.Contains("shell") && !text.Contains("bullet") && !text.StartsWith("vfx", StringComparison.Ordinal) && !text.Contains("muzzle") && !text.Contains("flare") && !text.Contains("decal") && !text.Contains("blood") && !text.Contains("impact") && !text.Contains("spawn_gun") && !text.Contains("spawngun") && !text.Contains("nimbus") && !((Object)(object)gameObject.GetComponentInChildren<Magazine>() != (Object)null))
+			string text = gameObject.name.ToLowerInvariant();
+			if (!text.Contains("cartridge") && !text.Contains("casing") && !text.Contains("shell") && !text.Contains("bullet") && !text.StartsWith("vfx", StringComparison.Ordinal) && !text.Contains("muzzle") && !text.Contains("flare") && !text.Contains("decal") && !text.Contains("blood") && !text.Contains("impact") && !text.Contains("spawn_gun") && !text.Contains("spawngun") && !text.Contains("nimbus") && !(gameObject.GetComponentInChildren<Magazine>() != null))
 			{
 				int num = s.spawns++;
-				s.spawned[((Il2CppObjectBase)(object)poolee).Pointer] = num;
+				s.spawned[poolee.Pointer] = num;
 				taking.events.Add(new Event
 				{
 					t = Time.time - s.startedAt,
 					kind = Kind.Spawn,
 					spawn = num,
-					barcode = ((Scannable)poolee.SpawnableCrate).Barcode.ID,
-					name = ((Object)gameObject).name,
+					barcode = poolee.SpawnableCrate.Barcode.ID,
+					name = gameObject.name,
 					at = gameObject.transform.position,
 					turn = gameObject.transform.rotation
 				});
 				if (s == manual)
 				{
-					Lab.Event("clone: spawn " + ((Object)gameObject).name);
+					Lab.Event("clone: spawn " + gameObject.name);
 				}
 			}
 		}
@@ -553,11 +551,11 @@ public static class Clone
 	{
 		Take taking = s.taking;
 		float startedAt = s.startedAt;
-		if (taking == null || (Object)(object)grip == (Object)null || (Object)(object)hand == (Object)null)
+		if (taking == null || grip == null || hand == null)
 		{
 			return;
 		}
-		int num = ((!((Object)(object)hand == (Object)(object)Player.LeftHand)) ? (((Object)(object)hand == (Object)(object)Player.RightHand) ? 1 : (-1)) : 0);
+		int num = ((!(hand == Player.LeftHand)) ? ((hand == Player.RightHand) ? 1 : (-1)) : 0);
 		if (num < 0)
 		{
 			return;
@@ -574,12 +572,12 @@ public static class Clone
 		}
 		try
 		{
-			if ((Object)(object)((Component)grip).GetComponentInParent<RigManager>() != (Object)null)
+			if (grip.GetComponentInParent<RigManager>() != null)
 			{
 				return;
 			}
-			Poolee componentInParent = ((Component)grip).GetComponentInParent<Poolee>();
-			if ((Object)(object)componentInParent != (Object)null && (Object)(object)componentInParent.SpawnableCrate != (Object)null && IsBody(((Scannable)componentInParent.SpawnableCrate).Barcode.ID, ((Object)((Component)componentInParent).gameObject).name))
+			Poolee componentInParent = grip.GetComponentInParent<Poolee>();
+			if (componentInParent != null && componentInParent.SpawnableCrate != null && IsBody(componentInParent.SpawnableCrate.Barcode.ID, componentInParent.gameObject.name))
 			{
 				return;
 			}
@@ -590,27 +588,27 @@ public static class Clone
 				hand = num,
 				grip = GripIndex(grip)
 			};
-			if ((Object)(object)componentInParent != (Object)null && s.spawned.TryGetValue(((Il2CppObjectBase)(object)componentInParent).Pointer, out var value))
+			if (componentInParent != null && s.spawned.TryGetValue(componentInParent.Pointer, out var value))
 			{
 				@event.spawn = value;
-				@event.name = "|" + ((Object)grip).name;
+				@event.name = "|" + grip.name;
 			}
 			else
 			{
-				Transform val = (((Object)(object)componentInParent != (Object)null) ? ((Component)componentInParent).transform : ((Component)grip).transform.root);
-				@event.barcode = (((Object)(object)componentInParent != (Object)null && (Object)(object)componentInParent.SpawnableCrate != (Object)null) ? ((Scannable)componentInParent.SpawnableCrate).Barcode.ID : "");
-				IntPtr key = (((Object)(object)componentInParent != (Object)null) ? ((Il2CppObjectBase)(object)componentInParent).Pointer : ((Il2CppObjectBase)(object)val).Pointer);
+				Transform transform = ((componentInParent != null) ? componentInParent.transform : grip.transform.root);
+				@event.barcode = ((componentInParent != null && componentInParent.SpawnableCrate != null) ? componentInParent.SpawnableCrate.Barcode.ID : "");
+				IntPtr key = ((componentInParent != null) ? componentInParent.Pointer : transform.Pointer);
 				if (!s.things.TryGetValue(key, out var value2))
 				{
 					value2 = s.things.Count;
 					s.things[key] = value2;
 				}
-				@event.name = ((Object)val).name + "|" + ((Object)grip).name + "|" + value2;
-				@event.at = val.position;
-				@event.turn = val.rotation;
+				@event.name = transform.name + "|" + grip.name + "|" + value2;
+				@event.at = transform.position;
+				@event.turn = transform.rotation;
 				@event.spawn = -1;
 			}
-			string text = (((Object)(object)componentInParent != (Object)null) ? ((Object)((Component)componentInParent).gameObject).name : ((Object)grip).name).ToUpperInvariant();
+			string text = ((componentInParent != null) ? componentInParent.gameObject.name : grip.name).ToUpperInvariant();
 			if (!text.Contains("SPAWN") && !text.Contains("NIMBUS"))
 			{
 				taking.events.Add(@event);
@@ -623,7 +621,7 @@ public static class Clone
 
 	public static void OnFired(Gun gun)
 	{
-		if ((Object)(object)gun == (Object)null || (Object)(object)gun.triggerGrip == (Object)null || gun.triggerGrip.attachedHands == null)
+		if (gun == null || gun.triggerGrip == null || gun.triggerGrip.attachedHands == null)
 		{
 			return;
 		}
@@ -680,10 +678,10 @@ public static class Clone
 
 	public static int GripIndex(Grip grip)
 	{
-		Grip[] array = GripsOf(((Component)grip).transform);
+		Grip[] array = GripsOf(grip.transform);
 		for (int i = 0; i < array.Length; i++)
 		{
-			if ((Object)(object)array[i] == (Object)(object)grip)
+			if (array[i] == grip)
 			{
 				return i;
 			}
@@ -693,8 +691,8 @@ public static class Clone
 
 	public static Grip[] GripsOf(Transform part)
 	{
-		MarrowEntity componentInParent = ((Component)part).GetComponentInParent<MarrowEntity>();
-		return ((Component)(((Object)(object)componentInParent != (Object)null) ? ((object)componentInParent) : ((object)part.root))).GetComponentsInChildren<Grip>(true);
+		MarrowEntity componentInParent = part.GetComponentInParent<MarrowEntity>();
+		return ((componentInParent != null) ? ((Component)componentInParent) : ((Component)part.root)).GetComponentsInChildren<Grip>(includeInactive: true);
 	}
 
 	public static void Save(Take take, string file)

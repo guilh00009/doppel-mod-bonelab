@@ -13,7 +13,7 @@ public class Navigator
 
 	private readonly NavMeshPath path = new NavMeshPath();
 
-	private Vector3[] corners = (Vector3[])(object)new Vector3[0];
+	private Vector3[] corners = new Vector3[0];
 
 	private int next;
 
@@ -75,20 +75,7 @@ public class Navigator
 
 	public void SetGoal(Vector3 goal)
 	{
-		int num;
-		if (HasGoal)
-		{
-			Vector3 val = Flat(goal - Goal);
-			if (((Vector3)(ref val)).magnitude < 3f)
-			{
-				num = ((corners.Length >= 2) ? 1 : 0);
-				goto IL_0039;
-			}
-		}
-		num = 0;
-		goto IL_0039;
-		IL_0039:
-		bool flag = (byte)num != 0;
+		bool flag = HasGoal && Flat(goal - Goal).magnitude < 3f && corners.Length >= 2;
 		Goal = goal;
 		HasGoal = true;
 		repathAt = (flag ? Mathf.Min(repathAt, Time.time + 0.25f) : 0f);
@@ -108,7 +95,7 @@ public class Navigator
 	public void Clear()
 	{
 		HasGoal = false;
-		corners = (Vector3[])(object)new Vector3[0];
+		corners = new Vector3[0];
 		StuckCount = 0;
 		gaveUp = false;
 	}
@@ -120,21 +107,17 @@ public class Navigator
 			return 0f;
 		}
 		float num = 0f;
-		Vector3 val = feet;
-		Vector3 val2;
+		Vector3 vector = feet;
 		for (int i = next; i < corners.Length; i++)
 		{
-			float num2 = num;
-			val2 = Flat(corners[i] - val);
-			num = num2 + ((Vector3)(ref val2)).magnitude;
-			val = corners[i];
+			num += Flat(corners[i] - vector).magnitude;
+			vector = corners[i];
 		}
 		if (next < corners.Length)
 		{
 			return num;
 		}
-		val2 = Flat(Goal - feet);
-		return ((Vector3)(ref val2)).magnitude;
+		return Flat(Goal - feet).magnitude;
 	}
 
 	public Vector3 Steer(Vector3 feet, Vector3 chest, Vector3 facing, out float rise, out bool drop)
@@ -147,8 +130,7 @@ public class Navigator
 			return Vector3.zero;
 		}
 		bool flag = corners.Length < 2 || next >= corners.Length;
-		Vector3 val = Flat(Goal - wayGoal);
-		bool flag2 = ((Vector3)(ref val)).magnitude > Tuning.F("nav.regoal", 1.5f);
+		bool flag2 = Flat(Goal - wayGoal).magnitude > Tuning.F("nav.regoal", 1.5f);
 		bool flag3 = !flag && OffWay(feet) > Tuning.F("nav.stray", 2f);
 		if (flag || flag2 || flag3 || Time.time >= repathAt)
 		{
@@ -156,100 +138,49 @@ public class Navigator
 			FindWay(feet, flag || flag3);
 			wayGoal = Goal;
 		}
-		while (next < corners.Length - 1)
+		while (next < corners.Length - 1 && (Flat(corners[next] - feet).magnitude < Tuning.F("nav.corner", 0.8f) || (Vector3.Dot(Flat(corners[next] - feet), Flat(corners[next + 1] - corners[next])) < 0f && Flat(corners[next] - feet).magnitude < 1.6f)))
 		{
-			val = Flat(corners[next] - feet);
-			if (!(((Vector3)(ref val)).magnitude < Tuning.F("nav.corner", 0.8f)))
-			{
-				if (!(Vector3.Dot(Flat(corners[next] - feet), Flat(corners[next + 1] - corners[next])) < 0f))
-				{
-					break;
-				}
-				val = Flat(corners[next] - feet);
-				if (!(((Vector3)(ref val)).magnitude < 1.6f))
-				{
-					break;
-				}
-			}
 			next++;
 		}
-		Vector3 val2 = ((next < corners.Length) ? corners[next] : Goal);
-		val = Flat(val2 - feet);
-		float magnitude = ((Vector3)(ref val)).magnitude;
-		Vector3 val3 = Flat((OnMesh ? LookAhead(feet, Tuning.F("nav.ahead", 1.3f)) : val2) - feet);
-		if (((Vector3)(ref val3)).sqrMagnitude < 0.0025f)
+		Vector3 vector = ((next < corners.Length) ? corners[next] : Goal);
+		float magnitude = Flat(vector - feet).magnitude;
+		Vector3 vector2 = Flat((OnMesh ? LookAhead(feet, Tuning.F("nav.ahead", 1.3f)) : vector) - feet);
+		if (vector2.sqrMagnitude < 0.0025f)
 		{
-			val3 = Flat(val2 - feet);
+			vector2 = Flat(vector - feet);
 		}
-		if (((Vector3)(ref val3)).sqrMagnitude < 0.0025f)
+		if (vector2.sqrMagnitude < 0.0025f)
 		{
 			return Vector3.zero;
 		}
-		((Vector3)(ref val3)).Normalize();
-		rise = ((magnitude < 1.2f) ? (val2.y - feet.y) : 0f);
-		Vector3 val4 = val3;
+		vector2.Normalize();
+		rise = ((magnitude < 1.2f) ? (vector.y - feet.y) : 0f);
+		Vector3 from = vector2;
 		if (!OnMesh)
 		{
-			val3 = Feel(feet, chest, val3, ref rise, out drop);
+			vector2 = Feel(feet, chest, vector2, ref rise, out drop);
 			if (drop)
 			{
-				DropDepth = Depth(feet, val3);
+				DropDepth = Depth(feet, vector2);
 			}
 		}
-		if (((Vector3)(ref lastDir)).sqrMagnitude > 0.01f && Time.time - lastDirAt < 0.3f && !drop)
+		if (lastDir.sqrMagnitude > 0.01f && Time.time - lastDirAt < 0.3f && !drop)
 		{
 			float num = Tuning.F("nav.turn", 170f) * Mathf.Max(Time.deltaTime, 0.005f);
-			val = Flat(Vector3.RotateTowards(lastDir, val3, num * ((float)Math.PI / 180f), 0f));
-			val3 = ((Vector3)(ref val)).normalized;
+			vector2 = Flat(Vector3.RotateTowards(lastDir, vector2, num * ((float)Math.PI / 180f), 0f)).normalized;
 		}
-		if (((Vector3)(ref lastDir)).sqrMagnitude > 0.01f && Time.time - lastDirAt < 0.3f && Vector3.Angle(lastDir, val3) > 50f && Time.time - turnSaidAt > 0.4f)
+		if (lastDir.sqrMagnitude > 0.01f && Time.time - lastDirAt < 0.3f && Vector3.Angle(lastDir, vector2) > 50f && Time.time - turnSaidAt > 0.4f)
 		{
 			turnSaidAt = Time.time;
-			string[] obj = new string[18]
-			{
-				"nav: its way turned ",
-				Vector3.SignedAngle(lastDir, val3, Vector3.up).ToString("0"),
-				" deg at once: ",
-				OnMesh ? "on the level's ways" : "by feel",
-				(wasMesh != OnMesh) ? (" (was " + (wasMesh ? "on them" : "by feel") + ")") : "",
-				", corner ",
-				next.ToString(),
-				" of ",
-				corners.Length.ToString(),
-				(lastNext != next) ? (" (was " + lastNext + ")") : "",
-				(lastCorners != corners.Length) ? ", new way" : "",
-				(Vector3.Angle(val4, val3) > 10f) ? (", turned " + Vector3.Angle(val4, val3).ToString("0") + " by a wall") : "",
-				", ",
-				magnitude.ToString("0.0"),
-				" m to the corner, goal ",
-				null,
-				null,
-				null
-			};
-			val = Flat(Goal - feet);
-			obj[15] = ((Vector3)(ref val)).magnitude.ToString("0");
-			obj[16] = " m";
-			val = Flat(Goal - lastGoal);
-			object obj2;
-			if (!(((Vector3)(ref val)).magnitude > 0.5f))
-			{
-				obj2 = "";
-			}
-			else
-			{
-				val = Flat(Goal - lastGoal);
-				obj2 = ", goal moved " + ((Vector3)(ref val)).magnitude.ToString("0.0") + " m";
-			}
-			obj[17] = (string)obj2;
-			Lab.Event(string.Concat(obj));
+			Lab.Event("nav: its way turned " + Vector3.SignedAngle(lastDir, vector2, Vector3.up).ToString("0") + " deg at once: " + (OnMesh ? "on the level's ways" : "by feel") + ((wasMesh != OnMesh) ? (" (was " + (wasMesh ? "on them" : "by feel") + ")") : "") + ", corner " + next + " of " + corners.Length + ((lastNext != next) ? (" (was " + lastNext + ")") : "") + ((lastCorners != corners.Length) ? ", new way" : "") + ((Vector3.Angle(from, vector2) > 10f) ? (", turned " + Vector3.Angle(from, vector2).ToString("0") + " by a wall") : "") + ", " + magnitude.ToString("0.0") + " m to the corner, goal " + Flat(Goal - feet).magnitude.ToString("0") + " m" + ((Flat(Goal - lastGoal).magnitude > 0.5f) ? (", goal moved " + Flat(Goal - lastGoal).magnitude.ToString("0.0") + " m") : ""));
 		}
-		lastDir = val3;
+		lastDir = vector2;
 		lastDirAt = Time.time;
 		wasMesh = OnMesh;
 		lastNext = next;
 		lastCorners = corners.Length;
 		lastGoal = Goal;
-		return val3;
+		return vector2;
 	}
 
 	private float OffWay(Vector3 feet)
@@ -258,24 +189,21 @@ public class Navigator
 		{
 			return 0f;
 		}
-		Vector3 val = corners[next - 1];
-		Vector3 val2 = corners[next];
-		Vector3 val3 = Flat(val2 - val);
-		float num = ((((Vector3)(ref val3)).sqrMagnitude > 0.0001f) ? Mathf.Clamp01(Vector3.Dot(Flat(feet - val), val3) / ((Vector3)(ref val3)).sqrMagnitude) : 0f);
-		Vector3 val4 = Flat(feet - (val + (val2 - val) * num));
-		return ((Vector3)(ref val4)).magnitude;
+		Vector3 vector = corners[next - 1];
+		Vector3 vector2 = corners[next];
+		Vector3 rhs = Flat(vector2 - vector);
+		float num = ((rhs.sqrMagnitude > 0.0001f) ? Mathf.Clamp01(Vector3.Dot(Flat(feet - vector), rhs) / rhs.sqrMagnitude) : 0f);
+		return Flat(feet - (vector + (vector2 - vector) * num)).magnitude;
 	}
 
 	private static float Length(Vector3[] way, int from, Vector3 start)
 	{
 		float num = 0f;
-		Vector3 val = start;
+		Vector3 vector = start;
 		for (int i = from; i < way.Length; i++)
 		{
-			float num2 = num;
-			Vector3 val2 = Flat(way[i] - val);
-			num = num2 + ((Vector3)(ref val2)).magnitude;
-			val = way[i];
+			num += Flat(way[i] - vector).magnitude;
+			vector = way[i];
 		}
 		return num;
 	}
@@ -286,30 +214,24 @@ public class Navigator
 		OnMesh = false;
 		try
 		{
-			NavMeshHit val = default(NavMeshHit);
-			NavMeshHit val2 = default(NavMeshHit);
-			if (NavMesh.SamplePosition(feet, ref val, 2.2f, -1) && NavMesh.SamplePosition(Goal, ref val2, 3f, -1) && NavMesh.CalculatePath(((NavMeshHit)(ref val)).position, ((NavMeshHit)(ref val2)).position, -1, path) && (int)path.status != 2)
+			if (NavMesh.SamplePosition(feet, out var hit, 2.2f, -1) && NavMesh.SamplePosition(Goal, out var hit2, 3f, -1) && NavMesh.CalculatePath(hit.position, hit2.position, -1, path) && path.status != NavMeshPathStatus.PathInvalid)
 			{
 				Vector3[] array = path.corners;
 				if (array != null && array.Length >= 2)
 				{
-					Vector3 val3 = Flat(array[1] - array[0]);
-					Vector3 val4 = ((onMesh && corners.Length >= 2 && next < corners.Length) ? Flat(corners[next] - feet) : Vector3.zero);
-					if (!afresh && ((Vector3)(ref val4)).sqrMagnitude > 0.2f && ((Vector3)(ref val3)).sqrMagnitude > 0.01f && Vector3.Angle(val4, val3) > Tuning.F("nav.swerve", 40f))
+					Vector3 to = Flat(array[1] - array[0]);
+					Vector3 from = ((onMesh && corners.Length >= 2 && next < corners.Length) ? Flat(corners[next] - feet) : Vector3.zero);
+					if (!afresh && from.sqrMagnitude > 0.2f && to.sqrMagnitude > 0.01f && Vector3.Angle(from, to) > Tuning.F("nav.swerve", 40f) && Flat(corners[corners.Length - 1] - Goal).magnitude < Tuning.F("nav.keep.end", 5f) && Length(array, 1, array[0]) > Length(corners, next, feet) * Tuning.F("nav.keep.shorter", 0.75f) - 1f)
 					{
-						Vector3 val5 = Flat(corners[corners.Length - 1] - Goal);
-						if (((Vector3)(ref val5)).magnitude < Tuning.F("nav.keep.end", 5f) && Length(array, 1, array[0]) > Length(corners, next, feet) * Tuning.F("nav.keep.shorter", 0.75f) - 1f)
-						{
-							Swerves++;
-							OnMesh = true;
-							return;
-						}
+						Swerves++;
+						OnMesh = true;
+						return;
 					}
-					if (((Vector3)(ref firstLeg)).sqrMagnitude < 0.01f || Vector3.Angle(firstLeg, val3) > 55f)
+					if (firstLeg.sqrMagnitude < 0.01f || Vector3.Angle(firstLeg, to) > 55f)
 					{
 						wayKeptSince = Time.time;
 					}
-					firstLeg = val3;
+					firstLeg = to;
 					corners = array;
 					next = 1;
 					OnMesh = true;
@@ -339,7 +261,7 @@ public class Navigator
 		}
 		offMeshFrom = -1f;
 		firstLeg = Vector3.zero;
-		corners = (Vector3[])(object)new Vector3[2] { feet, Goal };
+		corners = new Vector3[2] { feet, Goal };
 		next = 1;
 	}
 
@@ -349,28 +271,27 @@ public class Navigator
 		{
 			return feet;
 		}
-		Vector3 val = feet;
+		Vector3 vector = feet;
 		float num = distance;
 		for (int i = next; i < corners.Length; i++)
 		{
-			Vector3 val2 = Flat(corners[i] - val);
-			float magnitude = ((Vector3)(ref val2)).magnitude;
+			Vector3 vector2 = Flat(corners[i] - vector);
+			float magnitude = vector2.magnitude;
 			if (magnitude >= num && magnitude > 0.001f)
 			{
-				return val + val2 / magnitude * num;
+				return vector + vector2 / magnitude * num;
 			}
 			num -= magnitude;
-			((Vector3)(ref val))._002Ector(corners[i].x, val.y, corners[i].z);
+			vector = new Vector3(corners[i].x, vector.y, corners[i].z);
 		}
 		return Goal;
 	}
 
 	private static float Depth(Vector3 feet, Vector3 dir)
 	{
-		RaycastHit val = default(RaycastHit);
-		if (Physics.Raycast(feet + dir * 0.9f + Vector3.up * 0.5f, Vector3.down, ref val, 30f, -1, (QueryTriggerInteraction)1))
+		if (Physics.Raycast(feet + dir * 0.9f + Vector3.up * 0.5f, Vector3.down, out var hitInfo, 30f, -1, QueryTriggerInteraction.Ignore))
 		{
-			return feet.y - ((RaycastHit)(ref val)).point.y;
+			return feet.y - hitInfo.point.y;
 		}
 		return 99f;
 	}
@@ -378,25 +299,23 @@ public class Navigator
 	private Vector3 Feel(Vector3 feet, Vector3 chest, Vector3 dir, ref float rise, out bool drop)
 	{
 		drop = false;
-		RaycastHit hit = default(RaycastHit);
-		Vector3 val5;
-		if (Physics.SphereCast(chest, 0.18f, dir, ref hit, 0.9f, -1, (QueryTriggerInteraction)1) && !IsBot(hit))
+		if (Physics.SphereCast(chest, 0.18f, dir, out var hitInfo, 0.9f, -1, QueryTriggerInteraction.Ignore) && !IsBot(hitInfo))
 		{
-			Vector3 val = Flat(((RaycastHit)(ref hit)).normal);
-			if (((Vector3)(ref val)).sqrMagnitude > 0.01f)
+			Vector3 vector = Flat(hitInfo.normal);
+			if (vector.sqrMagnitude > 0.01f)
 			{
-				Vector3 val2 = Vector3.Cross(Vector3.up, ((Vector3)(ref val)).normalized);
-				float num = ((Time.time < sideUntil && slideSide != 0f) ? slideSide : ((Vector3.Dot(val2, dir) < 0f) ? (-1f) : 1f));
+				Vector3 vector2 = Vector3.Cross(Vector3.up, vector.normalized);
+				float num = ((Time.time < sideUntil && slideSide != 0f) ? slideSide : ((Vector3.Dot(vector2, dir) < 0f) ? (-1f) : 1f));
 				if (Time.time >= sideUntil || slideSide == 0f)
 				{
-					if (Mathf.Abs(Vector3.Dot(val2, dir)) < 0.3f)
+					if (Mathf.Abs(Vector3.Dot(vector2, dir)) < 0.3f)
 					{
-						RaycastHit val3 = default(RaycastHit);
-						bool flag = Physics.SphereCast(chest, 0.18f, val2, ref val3, 3f, -1, (QueryTriggerInteraction)1);
-						RaycastHit val4 = default(RaycastHit);
-						bool num2 = Physics.SphereCast(chest, 0.18f, -val2, ref val4, 3f, -1, (QueryTriggerInteraction)1);
-						float num3 = (flag ? ((RaycastHit)(ref val3)).distance : 3f);
-						float num4 = (num2 ? ((RaycastHit)(ref val4)).distance : 3f);
+						RaycastHit hitInfo2;
+						bool flag = Physics.SphereCast(chest, 0.18f, vector2, out hitInfo2, 3f, -1, QueryTriggerInteraction.Ignore);
+						RaycastHit hitInfo3;
+						bool num2 = Physics.SphereCast(chest, 0.18f, -vector2, out hitInfo3, 3f, -1, QueryTriggerInteraction.Ignore);
+						float num3 = (flag ? hitInfo2.distance : 3f);
+						float num4 = (num2 ? hitInfo3.distance : 3f);
 						if (Mathf.Abs(num3 - num4) > 0.3f)
 						{
 							num = ((num3 > num4) ? 1f : (-1f));
@@ -405,21 +324,18 @@ public class Navigator
 					slideSide = num;
 				}
 				sideUntil = Time.time + Tuning.F("nav.side.keep", 2.5f);
-				val5 = val2 * num + ((Vector3)(ref val)).normalized * 0.4f;
-				dir = ((Vector3)(ref val5)).normalized;
+				dir = (vector2 * num + vector.normalized * 0.4f).normalized;
 				slideDir = dir;
 				slideUntil = Time.time + Tuning.F("nav.slide.on", 0.35f);
 			}
 		}
-		else if (Time.time < slideUntil && ((Vector3)(ref slideDir)).sqrMagnitude > 0.01f)
+		else if (Time.time < slideUntil && slideDir.sqrMagnitude > 0.01f)
 		{
-			val5 = slideDir + dir * 0.5f;
-			dir = ((Vector3)(ref val5)).normalized;
+			dir = (slideDir + dir * 0.5f).normalized;
 		}
-		RaycastHit val6 = default(RaycastHit);
-		if (Physics.Raycast(feet + dir * 0.7f + Vector3.up * 1.4f, Vector3.down, ref val6, 3.4f, -1, (QueryTriggerInteraction)1))
+		if (Physics.Raycast(feet + dir * 0.7f + Vector3.up * 1.4f, Vector3.down, out var hitInfo4, 3.4f, -1, QueryTriggerInteraction.Ignore))
 		{
-			rise = Mathf.Max(rise, ((RaycastHit)(ref val6)).point.y - feet.y);
+			rise = Mathf.Max(rise, hitInfo4.point.y - feet.y);
 		}
 		else
 		{
@@ -430,9 +346,9 @@ public class Navigator
 
 	private static bool IsBot(RaycastHit hit)
 	{
-		if ((Object)(object)((RaycastHit)(ref hit)).collider != (Object)null)
+		if (hit.collider != null)
 		{
-			return (Object)(object)((Component)((RaycastHit)(ref hit)).collider).GetComponentInParent<RigManager>() != (Object)null;
+			return hit.collider.GetComponentInParent<RigManager>() != null;
 		}
 		return false;
 	}
@@ -451,28 +367,19 @@ public class Navigator
 		{
 			return false;
 		}
-		int num;
-		if (pushedFor > 0.9f)
-		{
-			Vector3 val = Flat(feet - lastPlace);
-			num = ((((Vector3)(ref val)).magnitude < 0.2f * push) ? 1 : 0);
-		}
-		else
-		{
-			num = 0;
-		}
+		bool num = pushedFor > 0.9f && Flat(feet - lastPlace).magnitude < 0.2f * push;
 		lastPlace = feet;
 		lastPlaceAt = Time.time;
-		if (num != 0)
+		if (num)
 		{
 			StuckCount++;
-			return (byte)num != 0;
+			return num;
 		}
 		if (!gaveUp)
 		{
 			StuckCount = 0;
 		}
-		return (byte)num != 0;
+		return num;
 	}
 
 	public static Vector3 Surface(Vector3 place, float level)
@@ -483,12 +390,11 @@ public class Navigator
 			{
 				return place;
 			}
-			foreach (RaycastHit item in Physics.RaycastAll(new Vector3(place.x, Mathf.Max(level, place.y) + 2.5f, place.z), Vector3.down, 9f, -1, (QueryTriggerInteraction)1))
+			foreach (RaycastHit item in Physics.RaycastAll(new Vector3(place.x, Mathf.Max(level, place.y) + 2.5f, place.z), Vector3.down, 9f, -1, QueryTriggerInteraction.Ignore))
 			{
-				RaycastHit current = item;
-				if (!((Object)(object)((RaycastHit)(ref current)).collider == (Object)null) && !((Object)(object)((RaycastHit)(ref current)).collider.attachedRigidbody != (Object)null) && !(((RaycastHit)(ref current)).normal.y < 0.6f) && ((RaycastHit)(ref current)).point.y > place.y + 0.4f && ((RaycastHit)(ref current)).point.y < level + 2.5f)
+				if (!(item.collider == null) && !(item.collider.attachedRigidbody != null) && !(item.normal.y < 0.6f) && item.point.y > place.y + 0.4f && item.point.y < level + 2.5f)
 				{
-					place = ((RaycastHit)(ref current)).point;
+					place = item.point;
 				}
 			}
 		}
@@ -500,29 +406,26 @@ public class Navigator
 
 	public static bool RandomPlace(Vector3 around, float near, float far, out Vector3 place)
 	{
-		NavMeshHit val3 = default(NavMeshHit);
-		RaycastHit val6 = default(RaycastHit);
 		for (int i = 0; i < 20; i++)
 		{
-			Vector2 insideUnitCircle = Random.insideUnitCircle;
-			Vector2 val = ((Vector2)(ref insideUnitCircle)).normalized * Random.Range(near, far);
-			Vector3 val2 = around + new Vector3(val.x, 0f, val.y);
+			Vector2 vector = UnityEngine.Random.insideUnitCircle.normalized * UnityEngine.Random.Range(near, far);
+			Vector3 vector2 = around + new Vector3(vector.x, 0f, vector.y);
 			try
 			{
-				if (NavMesh.SamplePosition(val2, ref val3, 2.5f, -1))
+				if (NavMesh.SamplePosition(vector2, out var hit, 2.5f, -1))
 				{
-					place = Surface(((NavMeshHit)(ref val3)).position, around.y);
+					place = Surface(hit.position, around.y);
 					return true;
 				}
 			}
 			catch (Exception)
 			{
 			}
-			Vector3 val4 = around + Vector3.up * 1.2f;
-			Vector3 val5 = val2 + Vector3.up * 1.2f;
-			if (!Physics.Linecast(val4, val5, -1, (QueryTriggerInteraction)1) && Physics.Raycast(val5, Vector3.down, ref val6, 3f, -1, (QueryTriggerInteraction)1))
+			Vector3 start = around + Vector3.up * 1.2f;
+			Vector3 vector3 = vector2 + Vector3.up * 1.2f;
+			if (!Physics.Linecast(start, vector3, -1, QueryTriggerInteraction.Ignore) && Physics.Raycast(vector3, Vector3.down, out var hitInfo, 3f, -1, QueryTriggerInteraction.Ignore))
 			{
-				place = ((RaycastHit)(ref val6)).point;
+				place = hitInfo.point;
 				return true;
 			}
 		}

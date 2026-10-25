@@ -54,7 +54,7 @@ public static class Recorder
 	{
 		RemapRig remapRig = Player.RemapRig;
 		int num;
-		if ((Object)(object)remapRig != (Object)null)
+		if (remapRig != null)
 		{
 			num = (remapRig._jumping ? 1 : 0);
 			if (num != 0 && !wasJumping)
@@ -170,33 +170,32 @@ public static class Recorder
 	{
 		frame = default(Frame);
 		OpenControllerRig controllerRig = Player.ControllerRig;
-		if ((Object)(object)controllerRig == (Object)null || (Object)(object)controllerRig.vrRoot == (Object)null || (Object)(object)controllerRig.headset == (Object)null || (Object)(object)((ControllerRig)controllerRig).leftController == (Object)null || (Object)(object)((ControllerRig)controllerRig).rightController == (Object)null)
+		if (controllerRig == null || controllerRig.vrRoot == null || controllerRig.headset == null || controllerRig.leftController == null || controllerRig.rightController == null)
 		{
 			return false;
 		}
 		Transform vrRoot = controllerRig.vrRoot;
 		Transform headset = controllerRig.headset;
 		Quaternion rotation = vrRoot.rotation;
-		Quaternion val = Quaternion.Inverse(rotation);
-		Vector3 val2 = vrRoot.InverseTransformPoint(headset.position);
-		Quaternion val3 = val * headset.rotation;
-		float num = Yaw(val3 * Vector3.forward);
-		Quaternion val4 = Quaternion.Euler(0f, num, 0f);
-		Quaternion val5 = Quaternion.Inverse(val4);
-		Vector3 val6 = default(Vector3);
-		((Vector3)(ref val6))._002Ector(val2.x, 0f, val2.z);
-		Transform transform = ((Component)((ControllerRig)controllerRig).leftController).transform;
-		Transform transform2 = ((Component)((ControllerRig)controllerRig).rightController).transform;
-		frame.yaw = Yaw(rotation * val4 * Vector3.forward);
+		Quaternion quaternion = Quaternion.Inverse(rotation);
+		Vector3 vector = vrRoot.InverseTransformPoint(headset.position);
+		Quaternion quaternion2 = quaternion * headset.rotation;
+		float y = Yaw(quaternion2 * Vector3.forward);
+		Quaternion quaternion3 = Quaternion.Euler(0f, y, 0f);
+		Quaternion quaternion4 = Quaternion.Inverse(quaternion3);
+		Vector3 vector2 = new Vector3(vector.x, 0f, vector.z);
+		Transform transform = controllerRig.leftController.transform;
+		Transform transform2 = controllerRig.rightController.transform;
+		frame.yaw = Yaw(rotation * quaternion3 * Vector3.forward);
 		frame.headWorld = headset.position;
-		frame.height = val2.y;
-		frame.head = val5 * val3;
-		frame.leftPos = val5 * (vrRoot.InverseTransformPoint(transform.position) - val6);
-		frame.rightPos = val5 * (vrRoot.InverseTransformPoint(transform2.position) - val6);
-		frame.leftRot = val5 * (val * transform.rotation);
-		frame.rightRot = val5 * (val * transform2.rotation);
-		BaseController leftController = ((ControllerRig)controllerRig).leftController;
-		BaseController rightController = ((ControllerRig)controllerRig).rightController;
+		frame.height = vector.y;
+		frame.head = quaternion4 * quaternion2;
+		frame.leftPos = quaternion4 * (vrRoot.InverseTransformPoint(transform.position) - vector2);
+		frame.rightPos = quaternion4 * (vrRoot.InverseTransformPoint(transform2.position) - vector2);
+		frame.leftRot = quaternion4 * (quaternion * transform.rotation);
+		frame.rightRot = quaternion4 * (quaternion * transform2.rotation);
+		BaseController leftController = controllerRig.leftController;
+		BaseController rightController = controllerRig.rightController;
 		frame.stick = leftController.GetThumbStickAxis();
 		frame.turnStick = rightController.GetThumbStickAxis();
 		frame.leftGrip = leftController._solvedGrip;
@@ -207,12 +206,12 @@ public static class Recorder
 		frame.leftB = leftController._bButton;
 		frame.rightA = rightController._aButton;
 		frame.rightB = rightController._bButton;
-		frame.jump = ((ControllerRig)controllerRig)._secondaryAButton;
-		frame.otherA = ((ControllerRig)controllerRig)._primaryAButton;
-		frame.primaryStick = ((ControllerRig)controllerRig)._primaryStick;
-		frame.secondaryStick = ((ControllerRig)controllerRig)._secondaryStick;
+		frame.jump = controllerRig._secondaryAButton;
+		frame.otherA = controllerRig._primaryAButton;
+		frame.primaryStick = controllerRig._primaryStick;
+		frame.secondaryStick = controllerRig._secondaryStick;
 		RemapRig remapRig = Player.RemapRig;
-		if ((Object)(object)remapRig != (Object)null)
+		if (remapRig != null)
 		{
 			frame.crouch = remapRig._crouchTarget;
 			frame.feet = remapRig._feetOffset;
@@ -224,7 +223,7 @@ public static class Recorder
 	{
 		frame.enemyDistance = -1f;
 		Transform head = Player.Head;
-		if ((Object)(object)head == (Object)null)
+		if (head == null)
 		{
 			return;
 		}
@@ -232,21 +231,19 @@ public static class Recorder
 		foreach (Targets.Target item in Targets.Hostiles())
 		{
 			frame.enemies++;
-			float num2 = num;
-			Vector3 val = item.Point - head.position;
-			num = Mathf.Min(num2, ((Vector3)(ref val)).magnitude);
+			num = Mathf.Min(num, (item.Point - head.position).magnitude);
 		}
 		if (frame.enemies > 0)
 		{
 			frame.enemyDistance = num;
 		}
-		frame.armed = (Object)(object)Player.GetComponentInHand<Gun>(Player.RightHand) != (Object)null || (Object)(object)Player.GetComponentInHand<Gun>(Player.LeftHand) != (Object)null;
+		frame.armed = Player.GetComponentInHand<Gun>(Player.RightHand) != null || Player.GetComponentInHand<Gun>(Player.LeftHand) != null;
 	}
 
 	public static float Yaw(Vector3 forward)
 	{
 		forward.y = 0f;
-		if (!(((Vector3)(ref forward)).sqrMagnitude < 1E-06f))
+		if (!(forward.sqrMagnitude < 1E-06f))
 		{
 			return Mathf.Atan2(forward.x, forward.z) * 57.29578f;
 		}
@@ -255,12 +252,12 @@ public static class Recorder
 
 	private static string Held(Hand hand)
 	{
-		GameObject val = (((Object)(object)hand != (Object)null) ? Player.GetObjectInHand(hand) : null);
-		if ((Object)(object)val == (Object)null)
+		GameObject gameObject = ((hand != null) ? Player.GetObjectInHand(hand) : null);
+		if (gameObject == null)
 		{
 			return "";
 		}
-		return ((Object)val).name.Replace(",", " ").Replace("\n", " ");
+		return gameObject.name.Replace(",", " ").Replace("\n", " ");
 	}
 
 	internal static string Write(Frame f)

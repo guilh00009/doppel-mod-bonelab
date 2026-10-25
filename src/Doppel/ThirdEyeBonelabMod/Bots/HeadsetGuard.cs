@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using BoneLib;
-using Il2CppInterop.Runtime.InteropTypes;
 using Il2CppSLZ.Marrow;
 using Il2CppSLZ.Marrow.Pool;
-using Il2CppSLZ.Marrow.Warehouse;
 using MelonLoader;
 using UnityEngine;
 
@@ -25,7 +23,7 @@ public static class HeadsetGuard
 			return;
 		}
 		RigManager rigManager = Player.RigManager;
-		if ((Object)(object)rigManager == (Object)null || !((Component)rigManager).gameObject.activeInHierarchy)
+		if (rigManager == null || !rigManager.gameObject.activeInHierarchy)
 		{
 			return;
 		}
@@ -33,22 +31,22 @@ public static class HeadsetGuard
 		{
 			foreach (Camera allCamera in Camera.allCameras)
 			{
-				if ((Object)(object)allCamera == (Object)null || !((Behaviour)allCamera).enabled || (Object)(object)allCamera.targetTexture != (Object)null || (int)allCamera.stereoTargetEye == 0)
+				if (allCamera == null || !allCamera.enabled || allCamera.targetTexture != null || allCamera.stereoTargetEye == StereoTargetEyeMask.None)
 				{
 					continue;
 				}
-				RigManager componentInParent = ((Component)allCamera).GetComponentInParent<RigManager>();
-				if (!((Object)(object)componentInParent == (Object)null) && !((Object)(object)componentInParent == (Object)(object)rigManager))
+				RigManager componentInParent = allCamera.GetComponentInParent<RigManager>();
+				if (!(componentInParent == null) && !(componentInParent == rigManager))
 				{
-					((Behaviour)allCamera).enabled = false;
-					AudioListener component = ((Component)allCamera).GetComponent<AudioListener>();
-					if ((Object)(object)component != (Object)null)
+					allCamera.enabled = false;
+					AudioListener component = allCamera.GetComponent<AudioListener>();
+					if (component != null)
 					{
-						((Behaviour)component).enabled = false;
+						component.enabled = false;
 					}
-					if (said.Add(((Il2CppObjectBase)(object)allCamera).Pointer))
+					if (said.Add(allCamera.Pointer))
 					{
-						MelonLogger.Warning("Bot Player: a second player body (" + ((Object)componentInParent).name + ") had a headset camera on: switched off");
+						MelonLogger.Warning("Bot Player: a second player body (" + componentInParent.name + ") had a headset camera on: switched off");
 					}
 					if (!BotRig.IsBot(componentInParent))
 					{
@@ -67,14 +65,14 @@ public static class HeadsetGuard
 	{
 		try
 		{
-			Poolee componentInParent = ((Component)rig).GetComponentInParent<Poolee>();
-			if ((Object)(object)componentInParent != (Object)null)
+			Poolee componentInParent = rig.GetComponentInParent<Poolee>();
+			if (componentInParent != null)
 			{
 				componentInParent.Despawn();
 			}
 			else
 			{
-				Object.Destroy((Object)(object)((Component)rig).gameObject);
+				UnityEngine.Object.Destroy(rig.gameObject);
 			}
 			MelonLogger.Msg("Bot Player: the second player body was taken away");
 		}
@@ -94,10 +92,10 @@ public static class HeadsetGuard
 	{
 		try
 		{
-			if (!((Object)(object)poolee == (Object)null) && !((Object)(object)poolee.SpawnableCrate == (Object)null))
+			if (!(poolee == null) && !(poolee.SpawnableCrate == null))
 			{
-				string iD = ((Scannable)poolee.SpawnableCrate).Barcode.ID;
-				if (Clone.IsBody(iD, ((Object)((Component)poolee).gameObject).name) || !((Object)(object)((Component)poolee).GetComponentInChildren<RigManager>(true) == (Object)null))
+				string iD = poolee.SpawnableCrate.Barcode.ID;
+				if (Clone.IsBody(iD, poolee.gameObject.name) || !(poolee.GetComponentInChildren<RigManager>(includeInactive: true) == null))
 				{
 					MelonLogger.Msg("Bot Player: a player body was spawned (" + iD + ")");
 				}

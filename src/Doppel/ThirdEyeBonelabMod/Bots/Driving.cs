@@ -89,9 +89,9 @@ public static class Driving
 			float num = turnRight - turnLeft;
 			float num2 = (Mathf.Clamp(turning, turnLeft - num * Tuning.F("drive.past", 0.25f), turnRight + num * Tuning.F("drive.past", 0.25f)) - turnLeft) / num * 10f;
 			int num3 = Mathf.Clamp(Mathf.FloorToInt(num2), 0, 9);
-			float num4 = num2 - (float)num3;
-			l = new Bot.Pose(Vector3.LerpUnclamped(left[num3].position, left[num3 + 1].position, num4), Quaternion.SlerpUnclamped(left[num3].rotation, left[num3 + 1].rotation, num4));
-			r = new Bot.Pose(Vector3.LerpUnclamped(right[num3].position, right[num3 + 1].position, num4), Quaternion.SlerpUnclamped(right[num3].rotation, right[num3 + 1].rotation, num4));
+			float t = num2 - (float)num3;
+			l = new Bot.Pose(Vector3.LerpUnclamped(left[num3].position, left[num3 + 1].position, t), Quaternion.SlerpUnclamped(left[num3].rotation, left[num3 + 1].rotation, t));
+			r = new Bot.Pose(Vector3.LerpUnclamped(right[num3].position, right[num3 + 1].position, t), Quaternion.SlerpUnclamped(right[num3].rotation, right[num3 + 1].rotation, t));
 		}
 
 		public string Said()
@@ -187,9 +187,9 @@ public static class Driving
 		{
 			return f.seat;
 		}
-		Vector3 val = f.pelvisTurn * Vector3.forward;
-		val.y = 0f;
-		return new Bot.Pose(f.pelvis, (((Vector3)(ref val)).sqrMagnitude > 0.001f) ? Quaternion.LookRotation(((Vector3)(ref val)).normalized, Vector3.up) : Quaternion.identity);
+		Vector3 vector = f.pelvisTurn * Vector3.forward;
+		vector.y = 0f;
+		return new Bot.Pose(f.pelvis, (vector.sqrMagnitude > 0.001f) ? Quaternion.LookRotation(vector.normalized, Vector3.up) : Quaternion.identity);
 	}
 
 	private static Vector3 Root(Clone.Frame f, bool inSeat)
@@ -249,8 +249,8 @@ public static class Driving
 			return;
 		}
 		m.inSeat = frames[i].seated && frames[num3].seated;
-		Vector3[] array = (Vector3[])(object)new Vector3[num4];
-		Vector3[] array2 = (Vector3[])(object)new Vector3[num4];
+		Vector3[] array = new Vector3[num4];
+		Vector3[] array2 = new Vector3[num4];
 		float[] array3 = new float[num4];
 		float[] array4 = new float[num4];
 		float[] array5 = new float[num4];
@@ -261,9 +261,9 @@ public static class Driving
 		{
 			Bot.Pose pose = From(frames[i + j], m.inSeat);
 			array[j] = pose.position;
-			Vector3 val = pose.rotation * Vector3.forward;
-			val.y = 0f;
-			array2[j] = ((((Vector3)(ref val)).sqrMagnitude > 0.001f) ? ((Vector3)(ref val)).normalized : Vector3.forward);
+			Vector3 vector = pose.rotation * Vector3.forward;
+			vector.y = 0f;
+			array2[j] = ((vector.sqrMagnitude > 0.001f) ? vector.normalized : Vector3.forward);
 			array3[j] = Mathf.Atan2(array2[j].x, array2[j].z) * 57.29578f;
 		}
 		float num5 = 0f;
@@ -272,9 +272,9 @@ public static class Driving
 			float num6 = frames[i + k + 6].t - frames[i + k - 6].t;
 			if (!(num6 < 0.01f))
 			{
-				Vector3 val2 = (array[k + 6] - array[k - 6]) / num6;
-				val2.y = 0f;
-				array4[k] = Vector3.Dot(val2, array2[k]);
+				Vector3 lhs = (array[k + 6] - array[k - 6]) / num6;
+				lhs.y = 0f;
+				array4[k] = Vector3.Dot(lhs, array2[k]);
 				array5[k] = Mathf.DeltaAngle(array3[k - 6], array3[k + 6]) * ((float)Math.PI / 180f) / num6;
 				num5 += array4[k];
 			}
@@ -320,20 +320,11 @@ public static class Driving
 		{
 			for (int num11 = num8; num11 <= num9; num11++)
 			{
-				if (array4[num11] < 1.8f)
+				if (!(array4[num11] < 1.8f) && (m.road.Count <= 0 || !((array[num11] - m.road[m.road.Count - 1]).magnitude < 1.5f)))
 				{
-					continue;
+					m.road.Add(array[num11]);
+					m.roadSpeed.Add(Mathf.Abs(array4[num11]));
 				}
-				if (m.road.Count > 0)
-				{
-					Vector3 val3 = array[num11] - m.road[m.road.Count - 1];
-					if (((Vector3)(ref val3)).magnitude < 1.5f)
-					{
-						continue;
-					}
-				}
-				m.road.Add(array[num11]);
-				m.roadSpeed.Add(Mathf.Abs(array4[num11]));
 			}
 		}
 		Channel[] array9 = new Channel[4]
@@ -448,20 +439,20 @@ public static class Driving
 					list8.Add(Mathf.Abs(list6[list6.Count - 1]));
 				}
 			}
-			float num31 = Together(list6, list7);
-			if (Mathf.Abs(num31) > 0.6f && Part(list8, 0.95f) > 0.3f && Mathf.Abs(num31) > m.fit)
+			float f2 = Together(list6, list7);
+			if (Mathf.Abs(f2) > 0.6f && Part(list8, 0.95f) > 0.3f && Mathf.Abs(f2) > m.fit)
 			{
+				float num31 = 0f;
 				float num32 = 0f;
-				float num33 = 0f;
-				for (int num34 = 0; num34 < list6.Count; num34++)
+				for (int num33 = 0; num33 < list6.Count; num33++)
 				{
-					num32 += list6[num34] * list6[num34];
-					num33 += list6[num34] * list7[num34];
+					num31 += list6[num33] * list6[num33];
+					num32 += list6[num33] * list7[num33];
 				}
 				m.stickSteer = true;
 				m.steer = channel;
-				m.steerGain = num33 / Mathf.Max(0.001f, num32);
-				m.fit = Mathf.Abs(num31);
+				m.steerGain = num32 / Mathf.Max(0.001f, num31);
+				m.fit = Mathf.Abs(f2);
 			}
 		}
 		m.leftGrab = HeldMost(take, 0, m.barcode, m.driveFrom, m.driveTo);
@@ -469,13 +460,13 @@ public static class Driving
 		Bot.Pose[] array15 = new Bot.Pose[num4];
 		Bot.Pose[] array16 = new Bot.Pose[num4];
 		Vector4 sum = Vector4.zero;
-		for (int num35 = 0; num35 < num4; num35++)
+		for (int num34 = 0; num34 < num4; num34++)
 		{
-			Clone.Frame f2 = frames[i + num35];
-			Bot.Pose pose2 = From(f2, m.inSeat).Inverse();
-			array15[num35] = pose2 * World(f2, f2.left, m.inSeat);
-			array16[num35] = pose2 * World(f2, f2.right, m.inSeat);
-			Quaternion rotation = (pose2 * World(f2, f2.head, m.inSeat)).rotation;
+			Clone.Frame f3 = frames[i + num34];
+			Bot.Pose pose2 = From(f3, m.inSeat).Inverse();
+			array15[num34] = pose2 * World(f3, f3.left, m.inSeat);
+			array16[num34] = pose2 * World(f3, f3.right, m.inSeat);
+			Quaternion rotation = (pose2 * World(f3, f3.head, m.inSeat)).rotation;
 			Add(ref sum, rotation);
 		}
 		m.head = Mean(sum);
@@ -484,9 +475,9 @@ public static class Driving
 		{
 			m.turnRight = Mathf.Abs(m.steerGain);
 			m.turnLeft = 0f - m.turnRight;
-			for (int num36 = 0; num36 < num4; num36++)
+			for (int num35 = 0; num35 < num4; num35++)
 			{
-				array17[num36] = m.steerGain * Read(frames[i + num36], m.steer);
+				array17[num35] = m.steerGain * Read(frames[i + num35], m.steer);
 			}
 		}
 		else
@@ -497,71 +488,71 @@ public static class Driving
 				return;
 			}
 			double[] array18 = new double[6];
-			int num37 = 0;
-			for (int num38 = 0; num38 < num4; num38++)
+			int num36 = 0;
+			for (int num37 = 0; num37 < num4; num37++)
 			{
-				if (array8[num38])
+				if (array8[num37])
 				{
-					double[] array19 = Feature(array15[num38], array16[num38], m);
-					for (int num39 = 0; num39 < 6; num39++)
+					double[] array19 = Feature(array15[num37], array16[num37], m);
+					for (int num38 = 0; num38 < 6; num38++)
 					{
-						array18[num39] += array19[num39];
+						array18[num38] += array19[num38];
 					}
-					num37++;
+					num36++;
 				}
 			}
-			for (int num40 = 0; num40 < 6; num40++)
+			for (int num39 = 0; num39 < 6; num39++)
 			{
-				array18[num40] /= num37;
+				array18[num39] /= num36;
 			}
 			double[,] array20 = new double[6, 6];
 			double[] array21 = new double[6];
-			double num41 = 0.0;
-			for (int num42 = 0; num42 < num4; num42++)
+			double num40 = 0.0;
+			for (int num41 = 0; num41 < num4; num41++)
 			{
-				if (!array8[num42])
+				if (!array8[num41])
 				{
 					continue;
 				}
-				double[] array22 = Feature(array15[num42], array16[num42], m);
-				for (int num43 = 0; num43 < 6; num43++)
+				double[] array22 = Feature(array15[num41], array16[num41], m);
+				for (int num42 = 0; num42 < 6; num42++)
 				{
-					array21[num43] += (array22[num43] - array18[num43]) * (double)array7[num42];
-					for (int num44 = 0; num44 < 6; num44++)
+					array21[num42] += (array22[num42] - array18[num42]) * (double)array7[num41];
+					for (int num43 = 0; num43 < 6; num43++)
 					{
-						array20[num43, num44] += (array22[num43] - array18[num43]) * (array22[num44] - array18[num44]);
+						array20[num42, num43] += (array22[num42] - array18[num42]) * (array22[num43] - array18[num43]);
 					}
 				}
 			}
+			for (int num44 = 0; num44 < 6; num44++)
+			{
+				num40 += array20[num44, num44];
+			}
 			for (int num45 = 0; num45 < 6; num45++)
 			{
-				num41 += array20[num45, num45];
-			}
-			for (int num46 = 0; num46 < 6; num46++)
-			{
-				array20[num46, num46] += 0.01 * num41 / 6.0 + 1E-06;
+				array20[num45, num45] += 0.01 * num40 / 6.0 + 1E-06;
 			}
 			double[] array23 = Solve(array20, array21, 6);
 			List<float> list9 = new List<float>();
 			List<float> list10 = new List<float>();
 			List<float> list11 = new List<float>();
-			for (int num47 = 0; num47 < num4; num47++)
+			for (int num46 = 0; num46 < num4; num46++)
 			{
-				double[] array24 = Feature(array15[num47], array16[num47], m);
-				double num48 = 0.0;
-				for (int num49 = 0; num49 < 6; num49++)
+				double[] array24 = Feature(array15[num46], array16[num46], m);
+				double num47 = 0.0;
+				for (int num48 = 0; num48 < 6; num48++)
 				{
-					num48 += array23[num49] * (array24[num49] - array18[num49]);
+					num47 += array23[num48] * (array24[num48] - array18[num48]);
 				}
-				array17[num47] = (float)num48;
-				if (frames[i + num47].t >= m.driveFrom && frames[i + num47].t <= m.driveTo)
+				array17[num46] = (float)num47;
+				if (frames[i + num46].t >= m.driveFrom && frames[i + num46].t <= m.driveTo)
 				{
-					list11.Add(array17[num47]);
+					list11.Add(array17[num46]);
 				}
-				if (array8[num47])
+				if (array8[num46])
 				{
-					list9.Add(array17[num47]);
-					list10.Add(array7[num47]);
+					list9.Add(array17[num46]);
+					list10.Add(array7[num46]);
 				}
 			}
 			m.fit = Together(list9, list10);
@@ -573,125 +564,123 @@ public static class Driving
 			m.turnLeft = Mathf.Min(-0.02f, Part(list11, 0.03f));
 			m.turnRight = Mathf.Max(0.02f, Part(list11, 0.97f));
 		}
-		Vector3[] array25 = (Vector3[])(object)new Vector3[11];
-		Vector3[] array26 = (Vector3[])(object)new Vector3[11];
-		Vector4[] array27 = (Vector4[])(object)new Vector4[11];
-		Vector4[] array28 = (Vector4[])(object)new Vector4[11];
+		Vector3[] array25 = new Vector3[11];
+		Vector3[] array26 = new Vector3[11];
+		Vector4[] array27 = new Vector4[11];
+		Vector4[] array28 = new Vector4[11];
 		int[] array29 = new int[11];
-		for (int num50 = 0; num50 < num4; num50++)
+		for (int num49 = 0; num49 < num4; num49++)
 		{
-			float t = frames[i + num50].t;
+			float t = frames[i + num49].t;
 			if (!(t < m.driveFrom) && !(t > m.driveTo))
 			{
-				int num51 = Mathf.Clamp(Mathf.RoundToInt(Mathf.InverseLerp(m.turnLeft, m.turnRight, array17[num50]) * 10f), 0, 10);
-				ref Vector3 reference = ref array25[num51];
-				reference += array15[num50].position;
-				ref Vector3 reference2 = ref array26[num51];
-				reference2 += array16[num50].position;
-				Add(ref array27[num51], array15[num50].rotation);
-				Add(ref array28[num51], array16[num50].rotation);
-				array29[num51]++;
+				int num50 = Mathf.Clamp(Mathf.RoundToInt(Mathf.InverseLerp(m.turnLeft, m.turnRight, array17[num49]) * 10f), 0, 10);
+				array25[num50] += array15[num49].position;
+				array26[num50] += array16[num49].position;
+				Add(ref array27[num50], array15[num49].rotation);
+				Add(ref array28[num50], array16[num49].rotation);
+				array29[num50]++;
 			}
 		}
-		int num52 = 0;
-		for (int num53 = 0; num53 < 11; num53++)
+		int num51 = 0;
+		for (int num52 = 0; num52 < 11; num52++)
 		{
-			if (array29[num53] < 3)
+			if (array29[num52] < 3)
 			{
-				array29[num53] = 0;
+				array29[num52] = 0;
 				continue;
 			}
-			m.left[num53] = new Bot.Pose(array25[num53] / (float)array29[num53], Mean(array27[num53]));
-			m.right[num53] = new Bot.Pose(array26[num53] / (float)array29[num53], Mean(array28[num53]));
-			num52++;
+			m.left[num52] = new Bot.Pose(array25[num52] / array29[num52], Mean(array27[num52]));
+			m.right[num52] = new Bot.Pose(array26[num52] / array29[num52], Mean(array28[num52]));
+			num51++;
 		}
-		if (num52 == 0)
+		if (num51 == 0)
 		{
 			m.why = "nothing kept of where your hands were";
 			return;
 		}
-		for (int num54 = 0; num54 < 11; num54++)
+		for (int num53 = 0; num53 < 11; num53++)
 		{
-			if (array29[num54] <= 0)
+			if (array29[num53] <= 0)
 			{
-				int num55 = num54;
-				int num56 = num54;
-				while (num55 >= 0 && array29[num55] == 0)
+				int num54 = num53;
+				int num55 = num53;
+				while (num54 >= 0 && array29[num54] == 0)
 				{
-					num55--;
+					num54--;
 				}
-				for (; num56 < 11 && array29[num56] == 0; num56++)
+				for (; num55 < 11 && array29[num55] == 0; num55++)
 				{
 				}
-				if (num55 >= 0 && num56 < 11)
+				if (num54 >= 0 && num55 < 11)
 				{
-					float k2 = (float)(num54 - num55) / (float)(num56 - num55);
-					m.left[num54] = Bot.Pose.Lerp(m.left[num55], m.left[num56], k2);
-					m.right[num54] = Bot.Pose.Lerp(m.right[num55], m.right[num56], k2);
+					float k2 = (float)(num53 - num54) / (float)(num55 - num54);
+					m.left[num53] = Bot.Pose.Lerp(m.left[num54], m.left[num55], k2);
+					m.right[num53] = Bot.Pose.Lerp(m.right[num54], m.right[num55], k2);
 				}
 				else
 				{
-					int num57 = ((num55 >= 0) ? num55 : num56);
-					m.left[num54] = m.left[num57];
-					m.right[num54] = m.right[num57];
+					int num56 = ((num54 >= 0) ? num54 : num55);
+					m.left[num53] = m.left[num56];
+					m.right[num53] = m.right[num56];
 				}
 			}
 		}
 		if (!m.stickSteer)
 		{
-			int num58 = 0;
-			int num59 = 10;
-			for (; num58 < 10 && array29[num58] == 0; num58++)
+			int num57 = 0;
+			int num58 = 10;
+			for (; num57 < 10 && array29[num57] == 0; num57++)
 			{
 			}
-			while (num59 > 0 && array29[num59] == 0)
+			while (num58 > 0 && array29[num58] == 0)
 			{
-				num59--;
+				num58--;
 			}
-			float num60 = Mathf.Lerp(m.turnLeft, m.turnRight, (float)num58 / 10f);
-			float num61 = Mathf.Lerp(m.turnLeft, m.turnRight, (float)num59 / 10f);
-			if (num58 > 0 || num59 < 10)
+			float b = Mathf.Lerp(m.turnLeft, m.turnRight, (float)num57 / 10f);
+			float b2 = Mathf.Lerp(m.turnLeft, m.turnRight, (float)num58 / 10f);
+			if (num57 > 0 || num58 < 10)
 			{
 				Bot.Pose[] array30 = new Bot.Pose[11];
 				Bot.Pose[] array31 = new Bot.Pose[11];
-				for (int num62 = 0; num62 < 11; num62++)
+				for (int num59 = 0; num59 < 11; num59++)
 				{
-					float num63 = Mathf.Lerp((float)num58, (float)num59, (float)num62 / 10f);
-					int num64 = Mathf.Clamp(Mathf.FloorToInt(num63), 0, 9);
-					array30[num62] = Bot.Pose.Lerp(m.left[num64], m.left[num64 + 1], num63 - (float)num64);
-					array31[num62] = Bot.Pose.Lerp(m.right[num64], m.right[num64 + 1], num63 - (float)num64);
+					float num60 = Mathf.Lerp(num57, num58, (float)num59 / 10f);
+					int num61 = Mathf.Clamp(Mathf.FloorToInt(num60), 0, 9);
+					array30[num59] = Bot.Pose.Lerp(m.left[num61], m.left[num61 + 1], num60 - (float)num61);
+					array31[num59] = Bot.Pose.Lerp(m.right[num61], m.right[num61 + 1], num60 - (float)num61);
 				}
 				m.left = array30;
 				m.right = array31;
-				m.turnLeft = Mathf.Min(-0.02f, num60);
-				m.turnRight = Mathf.Max(0.02f, num61);
+				m.turnLeft = Mathf.Min(-0.02f, b);
+				m.turnRight = Mathf.Max(0.02f, b2);
 			}
 		}
-		float num65 = Mathf.Max(0f - m.turnLeft, m.turnRight);
-		float num66 = Mathf.Min(0f - m.turnLeft, m.turnRight);
-		if (!m.stickSteer && num66 < num65 * 0.75f)
+		float num62 = Mathf.Max(0f - m.turnLeft, m.turnRight);
+		float num63 = Mathf.Min(0f - m.turnLeft, m.turnRight);
+		if (!m.stickSteer && num63 < num62 * 0.75f)
 		{
 			bool flag2 = 0f - m.turnLeft >= m.turnRight;
 			Bot.Pose[] array32 = new Bot.Pose[11];
 			Bot.Pose[] array33 = new Bot.Pose[11];
-			for (int num67 = 0; num67 < 11; num67++)
+			for (int num64 = 0; num64 < 11; num64++)
 			{
-				float num68 = Mathf.Lerp(0f - num65, num65, (float)num67 / 10f);
-				m.Hands(num68, out var l2, out var r);
-				if (!(flag2 ? (num68 <= 0f) : (num68 >= 0f)))
+				float num65 = Mathf.Lerp(0f - num62, num62, (float)num64 / 10f);
+				m.Hands(num65, out var l2, out var r);
+				if (!(flag2 ? (num65 <= 0f) : (num65 >= 0f)))
 				{
-					m.Hands(0f - num68, out var l3, out var r2);
-					float k3 = Mathf.Clamp01(Mathf.Abs(num68) / Mathf.Max(0.02f, num66));
+					m.Hands(0f - num65, out var l3, out var r2);
+					float k3 = Mathf.Clamp01(Mathf.Abs(num65) / Mathf.Max(0.02f, num63));
 					l2 = Bot.Pose.Lerp(l2, Mirror(r2), k3);
 					r = Bot.Pose.Lerp(r, Mirror(l3), k3);
 				}
-				array32[num67] = l2;
-				array33[num67] = r;
+				array32[num64] = l2;
+				array33[num64] = r;
 			}
 			m.left = array32;
 			m.right = array33;
-			m.turnLeft = 0f - num65;
-			m.turnRight = num65;
+			m.turnLeft = 0f - num62;
+			m.turnRight = num62;
 			m.mirrored = (flag2 ? "right" : "left");
 		}
 		m.ok = true;
@@ -704,9 +693,9 @@ public static class Driving
 
 	private static double[] Feature(Bot.Pose l, Bot.Pose r, Model m)
 	{
-		Vector3 val = ((m.leftGrab != null) ? l.position : Vector3.zero);
-		Vector3 val2 = ((m.rightGrab != null) ? r.position : Vector3.zero);
-		return new double[6] { val.x, val.y, val.z, val2.x, val2.y, val2.z };
+		Vector3 vector = ((m.leftGrab != null) ? l.position : Vector3.zero);
+		Vector3 vector2 = ((m.rightGrab != null) ? r.position : Vector3.zero);
+		return new double[6] { vector.x, vector.y, vector.z, vector2.x, vector2.y, vector2.z };
 	}
 
 	private static Clone.Event HeldMost(Clone.Take take, int hand, string barcode, float from, float to)
@@ -758,22 +747,21 @@ public static class Driving
 
 	private static void Add(ref Vector4 sum, Quaternion q)
 	{
-		Vector4 val = default(Vector4);
-		((Vector4)(ref val))._002Ector(q.x, q.y, q.z, q.w);
-		if (Vector4.Dot(sum, val) < 0f)
+		Vector4 vector = new Vector4(q.x, q.y, q.z, q.w);
+		if (Vector4.Dot(sum, vector) < 0f)
 		{
-			val = -val;
+			vector = -vector;
 		}
-		sum += val;
+		sum += vector;
 	}
 
 	private static Quaternion Mean(Vector4 sum)
 	{
-		if (((Vector4)(ref sum)).sqrMagnitude < 1E-08f)
+		if (sum.sqrMagnitude < 1E-08f)
 		{
 			return Quaternion.identity;
 		}
-		((Vector4)(ref sum)).Normalize();
+		sum.Normalize();
 		return new Quaternion(sum.x, sum.y, sum.z, sum.w);
 	}
 
@@ -840,24 +828,11 @@ public static class Driving
 			}
 			if (num != i)
 			{
-				ref double reference;
-				double num3;
-				double num2;
 				for (int k = 0; k < n; k++)
 				{
-					reference = ref array[i, k];
-					ref double reference2 = ref array[num, k];
-					num2 = array[num, k];
-					num3 = array[i, k];
-					reference = num2;
-					reference2 = num3;
+					(array[i, k], array[num, k]) = (array[num, k], array[i, k]);
 				}
-				reference = ref array2[i];
-				ref double reference3 = ref array2[num];
-				num3 = array2[num];
-				num2 = array2[i];
-				reference = num3;
-				reference3 = num2;
+				(array2[i], array2[num]) = (array2[num], array2[i]);
 			}
 			for (int l = 0; l < n; l++)
 			{

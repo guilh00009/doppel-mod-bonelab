@@ -70,19 +70,19 @@ public static class PortalWays
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	private static void Look()
 	{
-		foreach (Portal item in Object.FindObjectsOfType<Portal>())
+		foreach (Portal item in UnityEngine.Object.FindObjectsOfType<Portal>())
 		{
-			if (!((Object)(object)item == (Object)null) && ((Component)item).gameObject.activeInHierarchy)
+			if (!((UnityEngine.Object)(object)item == null) && ((Component)(object)item).gameObject.activeInHierarchy)
 			{
 				Portal otherPortal = item.OtherPortal;
-				if (!((Object)(object)otherPortal == (Object)null) && ((Component)otherPortal).gameObject.activeInHierarchy)
+				if (!((UnityEngine.Object)(object)otherPortal == null) && ((Component)(object)otherPortal).gameObject.activeInHierarchy)
 				{
 					ways.Add(new Way
 					{
-						inAt = ((Component)item).transform.position,
-						inOpen = Open(((Component)item).transform),
-						outAt = ((Component)otherPortal).transform.position,
-						outOpen = Open(((Component)otherPortal).transform),
+						inAt = ((Component)(object)item).transform.position,
+						inOpen = Open(((Component)(object)item).transform),
+						outAt = ((Component)(object)otherPortal).transform.position,
+						outOpen = Open(((Component)(object)otherPortal).transform),
 						id = ((Il2CppObjectBase)(object)item).Pointer,
 						portal = (Component)(object)item,
 						other = (Component)(object)otherPortal
@@ -99,10 +99,9 @@ public static class PortalWays
 
 	private static bool Blocked(Vector3 at, Vector3 dir)
 	{
-		foreach (RaycastHit item in Physics.RaycastAll(at + dir * 0.02f, dir, 0.5f, -1, (QueryTriggerInteraction)1))
+		foreach (RaycastHit item in Physics.RaycastAll(at + dir * 0.02f, dir, 0.5f, -1, QueryTriggerInteraction.Ignore))
 		{
-			RaycastHit current = item;
-			if ((Object)(object)((RaycastHit)(ref current)).collider != (Object)null && (Object)(object)((RaycastHit)(ref current)).collider.attachedRigidbody == (Object)null)
+			if (item.collider != null && item.collider.attachedRigidbody == null)
 			{
 				return true;
 			}
@@ -113,31 +112,22 @@ public static class PortalWays
 	public static void Update()
 	{
 		Transform head = Player.Head;
-		if ((Object)(object)head == (Object)null)
+		if (head == null)
 		{
 			playerHas = false;
 			return;
 		}
 		Vector3 position = head.position;
-		if (playerHas)
+		if (playerHas && (position - playerWas).magnitude > 2f)
 		{
-			Vector3 val = position - playerWas;
-			if (((Vector3)(ref val)).magnitude > 2f)
+			foreach (Way item in All)
 			{
-				foreach (Way item in All)
+				if ((item.inAt - playerWas).magnitude < 2.5f && (item.outAt - position).magnitude < 3.5f)
 				{
-					val = item.inAt - playerWas;
-					if (((Vector3)(ref val)).magnitude < 2.5f)
-					{
-						val = item.outAt - position;
-						if (((Vector3)(ref val)).magnitude < 3.5f)
-						{
-							PlayerTook = item;
-							PlayerTookAt = Time.time;
-							Lab.Event("portals: you went through one");
-							break;
-						}
-					}
+					PlayerTook = item;
+					PlayerTookAt = Time.time;
+					Lab.Event("portals: you went through one");
+					break;
 				}
 			}
 		}
@@ -148,17 +138,13 @@ public static class PortalWays
 	public static bool Shorter(Vector3 from, Vector3 to, out Way best)
 	{
 		best = default(Way);
-		Vector3 val = to - from;
-		float num = ((Vector3)(ref val)).magnitude * Tuning.F("portal.worth", 0.7f) - 2f;
+		float num = (to - from).magnitude * Tuning.F("portal.worth", 0.7f) - 2f;
 		bool result = false;
 		foreach (Way item in All)
 		{
 			if (!(item.inOpen.y < -0.5f) && !(item.inAt.y - from.y > 2.2f))
 			{
-				val = item.inAt - from;
-				float magnitude = ((Vector3)(ref val)).magnitude;
-				val = to - item.outAt;
-				float num2 = magnitude + ((Vector3)(ref val)).magnitude;
+				float num2 = (item.inAt - from).magnitude + (to - item.outAt).magnitude;
 				if (num2 < num)
 				{
 					num = num2;

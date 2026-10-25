@@ -5,11 +5,9 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using BoneLib;
-using Il2CppInterop.Runtime.InteropTypes;
 using Il2CppSLZ.Marrow;
 using Il2CppSLZ.Marrow.Interaction;
 using Il2CppSLZ.Marrow.Pool;
-using Il2CppSLZ.Marrow.Warehouse;
 using MelonLoader;
 using UnityEngine;
 
@@ -136,61 +134,61 @@ public static class GripBook
 
 	public static Transform ThingOf(Grip g)
 	{
-		if ((Object)(object)g == (Object)null)
+		if (g == null)
 		{
 			return null;
 		}
-		MarrowEntity componentInParent = ((Component)g).GetComponentInParent<MarrowEntity>();
-		if ((Object)(object)componentInParent != (Object)null)
+		MarrowEntity componentInParent = g.GetComponentInParent<MarrowEntity>();
+		if (componentInParent != null)
 		{
-			return ((Component)componentInParent).transform;
+			return componentInParent.transform;
 		}
-		Rigidbody componentInParent2 = ((Component)g).GetComponentInParent<Rigidbody>();
-		if (!((Object)(object)componentInParent2 != (Object)null))
+		Rigidbody componentInParent2 = g.GetComponentInParent<Rigidbody>();
+		if (!(componentInParent2 != null))
 		{
 			return null;
 		}
-		return ((Component)componentInParent2).transform;
+		return componentInParent2.transform;
 	}
 
 	public static string KeyOf(Transform thing)
 	{
-		if ((Object)(object)thing == (Object)null)
+		if (thing == null)
 		{
 			return "";
 		}
 		try
 		{
-			Poolee componentInParent = ((Component)thing).GetComponentInParent<Poolee>();
-			if ((Object)(object)componentInParent != (Object)null && (Object)(object)componentInParent.SpawnableCrate != (Object)null)
+			Poolee componentInParent = thing.GetComponentInParent<Poolee>();
+			if (componentInParent != null && componentInParent.SpawnableCrate != null)
 			{
-				return ((Scannable)componentInParent.SpawnableCrate).Barcode.ID;
+				return componentInParent.SpawnableCrate.Barcode.ID;
 			}
 		}
 		catch (Exception)
 		{
 		}
-		return Plain(((Object)thing).name);
+		return Plain(thing.name);
 	}
 
 	public static string NameOf(Transform thing)
 	{
-		if ((Object)(object)thing == (Object)null)
+		if (thing == null)
 		{
 			return "?";
 		}
 		try
 		{
-			Poolee componentInParent = ((Component)thing).GetComponentInParent<Poolee>();
-			if ((Object)(object)componentInParent != (Object)null && (Object)(object)componentInParent.SpawnableCrate != (Object)null && !string.IsNullOrEmpty(((Scannable)componentInParent.SpawnableCrate).Title))
+			Poolee componentInParent = thing.GetComponentInParent<Poolee>();
+			if (componentInParent != null && componentInParent.SpawnableCrate != null && !string.IsNullOrEmpty(componentInParent.SpawnableCrate.Title))
 			{
-				return ((Scannable)componentInParent.SpawnableCrate).Title;
+				return componentInParent.SpawnableCrate.Title;
 			}
 		}
 		catch (Exception)
 		{
 		}
-		return Plain(((Object)thing).name);
+		return Plain(thing.name);
 	}
 
 	private static string Plain(string name)
@@ -206,31 +204,31 @@ public static class GripBook
 	public static string PathOf(Grip g, Transform thing)
 	{
 		StringBuilder stringBuilder = new StringBuilder();
-		Transform val = ((Component)g).transform;
-		while ((Object)(object)val != (Object)null && (Object)(object)val != (Object)(object)thing)
+		Transform transform = g.transform;
+		while (transform != null && transform != thing)
 		{
-			stringBuilder.Insert(0, (stringBuilder.Length > 0) ? (Plain(((Object)val).name) + "/") : Plain(((Object)val).name));
-			val = val.parent;
+			stringBuilder.Insert(0, (stringBuilder.Length > 0) ? (Plain(transform.name) + "/") : Plain(transform.name));
+			transform = transform.parent;
 		}
 		return stringBuilder.ToString();
 	}
 
 	private static Transform BodyOf(Grip g)
 	{
-		Rigidbody componentInParent = ((Component)g).GetComponentInParent<Rigidbody>();
-		if (!((Object)(object)componentInParent != (Object)null))
+		Rigidbody componentInParent = g.GetComponentInParent<Rigidbody>();
+		if (!(componentInParent != null))
 		{
-			return ((Component)g).transform;
+			return g.transform;
 		}
-		return ((Component)componentInParent).transform;
+		return componentInParent.transform;
 	}
 
 	private static bool MainGrip(Grip g, Transform thing)
 	{
-		Gun val = (((Object)(object)thing != (Object)null) ? ((Component)thing).GetComponentInChildren<Gun>() : null);
-		if ((Object)(object)val != (Object)null)
+		Gun gun = ((thing != null) ? thing.GetComponentInChildren<Gun>() : null);
+		if (gun != null)
 		{
-			return (Object)(object)val.triggerGrip == (Object)(object)g;
+			return gun.triggerGrip == g;
 		}
 		return false;
 	}
@@ -264,39 +262,39 @@ public static class GripBook
 
 	private static Grip Held(Hand hand)
 	{
-		if ((Object)(object)hand == (Object)null || (Object)(object)hand.m_CurrentAttachedGO == (Object)null)
+		if (hand == null || hand.m_CurrentAttachedGO == null)
 		{
 			return null;
 		}
-		Grip val = null;
+		Grip grip = null;
 		try
 		{
-			val = (((Object)(object)hand.AttachedReceiver != (Object)null) ? ((Il2CppObjectBase)(object)hand.AttachedReceiver).TryCast<Grip>() : null);
+			grip = ((hand.AttachedReceiver != null) ? hand.AttachedReceiver.TryCast<Grip>() : null);
 		}
 		catch (Exception)
 		{
 		}
-		if ((Object)(object)val == (Object)null)
+		if (grip == null)
 		{
-			val = hand.m_CurrentAttachedGO.GetComponent<Grip>();
+			grip = hand.m_CurrentAttachedGO.GetComponent<Grip>();
 		}
-		if ((Object)(object)val == (Object)null || (Object)(object)((Il2CppObjectBase)(object)val).TryCast<WorldGrip>() != (Object)null || (Object)(object)((Component)val).GetComponentInParent<RigManager>() != (Object)null || (Object)(object)((Component)val).GetComponentInParent<Rigidbody>() == (Object)null)
+		if (grip == null || grip.TryCast<WorldGrip>() != null || grip.GetComponentInParent<RigManager>() != null || grip.GetComponentInParent<Rigidbody>() == null)
 		{
 			return null;
 		}
-		return val;
+		return grip;
 	}
 
 	private static void Look(Watch w, Hand hand, string side)
 	{
-		Grip val = Held(hand);
-		IntPtr intPtr = (((Object)(object)val != (Object)null) ? ((Il2CppObjectBase)(object)val).Pointer : IntPtr.Zero);
+		Grip grip = Held(hand);
+		IntPtr intPtr = ((grip != null) ? grip.Pointer : IntPtr.Zero);
 		if (intPtr != w.grip)
 		{
 			Let(w);
 			w.grip = intPtr;
-			w.g = val;
-			w.thing = ThingOf(val);
+			w.g = grip;
+			w.thing = ThingOf(grip);
 			w.side = side;
 			w.since = Time.time;
 			w.heldFrom = Time.time;
@@ -304,19 +302,19 @@ public static class GripBook
 			Array.Clear(w.fingers, 0, 5);
 			w.done = false;
 		}
-		if (!((Object)(object)val == (Object)null) && !w.done && !(Time.time - w.since < Tuning.F("grips.settle", 0.4f)) && !(Time.time < w.sampleAt))
+		if (!(grip == null) && !w.done && !(Time.time - w.since < Tuning.F("grips.settle", 0.4f)) && !(Time.time < w.sampleAt))
 		{
 			w.sampleAt = Time.time + 0.08f;
-			Bot.Pose item = Bot.Pose.Of(BodyOf(val)).Inverse() * Bot.Pose.Of(((Component)hand).transform);
+			Bot.Pose item = Bot.Pose.Of(BodyOf(grip)).Inverse() * Bot.Pose.Of(hand.transform);
 			w.samples.Add(item);
-			BaseController val2 = ((side == "L") ? Player.LeftController : Player.RightController);
-			if ((Object)(object)val2 != (Object)null)
+			BaseController baseController = ((side == "L") ? Player.LeftController : Player.RightController);
+			if (baseController != null)
 			{
-				w.fingers[0] += val2._processedIndex;
-				w.fingers[1] += val2._processedMiddle;
-				w.fingers[2] += val2._processedRing;
-				w.fingers[3] += val2._processedPinky;
-				w.fingers[4] += val2._processedThumb;
+				w.fingers[0] += baseController._processedIndex;
+				w.fingers[1] += baseController._processedMiddle;
+				w.fingers[2] += baseController._processedRing;
+				w.fingers[3] += baseController._processedPinky;
+				w.fingers[4] += baseController._processedThumb;
 			}
 			if (w.samples.Count >= 12)
 			{
@@ -328,7 +326,7 @@ public static class GripBook
 
 	private static void Let(Watch w)
 	{
-		if (w.grip != IntPtr.Zero && w.done && (Object)(object)w.g != (Object)null)
+		if (w.grip != IntPtr.Zero && w.done && w.g != null)
 		{
 			Entry entry = Find(KeyOf(w.thing), PathOf(w.g, w.thing), w.side);
 			if (entry != null)
@@ -346,22 +344,22 @@ public static class GripBook
 
 	private static void Commit(Watch w, string side)
 	{
-		if ((Object)(object)w.g == (Object)null || (Object)(object)w.thing == (Object)null)
+		if (w.g == null || w.thing == null)
 		{
 			return;
 		}
-		Vector3 val = Vector3.zero;
-		Quaternion val2 = w.samples[0].rotation;
+		Vector3 zero = Vector3.zero;
+		Quaternion quaternion = w.samples[0].rotation;
 		for (int i = 0; i < w.samples.Count; i++)
 		{
-			val += w.samples[i].position;
+			zero += w.samples[i].position;
 			if (i > 0)
 			{
-				val2 = Quaternion.Slerp(val2, w.samples[i].rotation, 1f / (float)(i + 1));
+				quaternion = Quaternion.Slerp(quaternion, w.samples[i].rotation, 1f / (float)(i + 1));
 			}
 		}
-		val /= (float)w.samples.Count;
-		Bot.Pose pose = new Bot.Pose(val, val2);
+		zero /= (float)w.samples.Count;
+		Bot.Pose pose = new Bot.Pose(zero, quaternion);
 		float[] array = new float[5];
 		for (int j = 0; j < 5; j++)
 		{
@@ -378,7 +376,7 @@ public static class GripBook
 				item = text,
 				name = NameOf(w.thing),
 				grip = text2,
-				gripName = Plain(((Object)w.g).name),
+				gripName = Plain(w.g.name),
 				side = side,
 				main = MainGrip(w.g, w.thing),
 				pose = GunMoves.P(pose),
@@ -406,7 +404,7 @@ public static class GripBook
 		}
 		entry.n = Mathf.Min(entry.n + 1, 50);
 		dirty = true;
-		string text3 = NameOf(w.thing) + ": " + ((side == "L") ? "left" : "right") + " hand on " + Plain(((Object)w.g).name) + (flag ? "" : (" (" + entry.n + ")"));
+		string text3 = NameOf(w.thing) + ": " + ((side == "L") ? "left" : "right") + " hand on " + Plain(w.g.name) + (flag ? "" : (" (" + entry.n + ")"));
 		Lab.Event("grips: learned " + text3);
 		MoveSlots.Note("<size=60%>learned " + text3 + "</size>", 2.5f);
 	}
@@ -427,17 +425,17 @@ public static class GripBook
 	{
 		hand = default(Bot.Pose);
 		mirrored = false;
-		if ((Object)(object)g == (Object)null || Tuning.F("grips.use", 1f) < 0.5f)
+		if (g == null || Tuning.F("grips.use", 1f) < 0.5f)
 		{
 			return false;
 		}
-		Transform val = ThingOf(g);
-		if ((Object)(object)val == (Object)null)
+		Transform transform = ThingOf(g);
+		if (transform == null)
 		{
 			return false;
 		}
-		string key = KeyOf(val);
-		string path = PathOf(g, val);
+		string key = KeyOf(transform);
+		string path = PathOf(g, transform);
 		Entry entry = Find(key, path, leftHand ? "L" : "R");
 		if (entry == null)
 		{
@@ -452,7 +450,7 @@ public static class GripBook
 		if (mirrored)
 		{
 			Transform t = BodyOf(g);
-			Transform t2 = val;
+			Transform t2 = transform;
 			Bot.Pose pose2 = Bot.Pose.Of(t2).Inverse() * Bot.Pose.Of(t) * pose;
 			pose2 = new Bot.Pose(new Vector3(0f - pose2.position.x, pose2.position.y, pose2.position.z), new Quaternion(pose2.rotation.x, 0f - pose2.rotation.y, 0f - pose2.rotation.z, pose2.rotation.w));
 			hand = Bot.Pose.Of(t2) * pose2;
@@ -464,17 +462,17 @@ public static class GripBook
 
 	public static float[] FingersOn(Grip g, bool leftHand)
 	{
-		if ((Object)(object)g == (Object)null)
+		if (g == null)
 		{
 			return null;
 		}
-		Transform val = ThingOf(g);
-		if ((Object)(object)val == (Object)null)
+		Transform transform = ThingOf(g);
+		if (transform == null)
 		{
 			return null;
 		}
-		string key = KeyOf(val);
-		string path = PathOf(g, val);
+		string key = KeyOf(transform);
+		string path = PathOf(g, transform);
 		Entry entry = Find(key, path, leftHand ? "L" : "R") ?? Find(key, path, leftHand ? "R" : "L");
 		if (entry == null || entry.fingers == null || entry.fingers.Length < 5)
 		{
@@ -495,21 +493,21 @@ public static class GripBook
 
 	private static Grip Favourite(Transform thing, Grip not, bool mainWanted)
 	{
-		if ((Object)(object)thing == (Object)null || Tuning.F("grips.use", 1f) < 0.5f)
+		if (thing == null || Tuning.F("grips.use", 1f) < 0.5f)
 		{
 			return null;
 		}
 		string text = KeyOf(thing);
 		Grip result = null;
 		float num = -1f;
-		Grip[] array = ((Component)thing).GetComponentsInChildren<Grip>(false);
-		foreach (Entry grip in Data.grips)
+		Grip[] array = thing.GetComponentsInChildren<Grip>(includeInactive: false);
+		foreach (Entry grip2 in Data.grips)
 		{
-			if (grip.item != text)
+			if (grip2.item != text)
 			{
 				continue;
 			}
-			bool main = grip.main;
+			bool main = grip2.main;
 			bool num2;
 			if (!mainWanted)
 			{
@@ -529,17 +527,17 @@ public static class GripBook
 			}
 			goto IL_008d;
 			IL_008d:
-			float num3 = grip.held + (float)grip.n;
+			float num3 = grip2.held + (float)grip2.n;
 			if (num3 <= num)
 			{
 				continue;
 			}
 			Grip[] array2 = array;
-			foreach (Grip val in array2)
+			foreach (Grip grip in array2)
 			{
-				if (!((Object)(object)val == (Object)null) && !((Object)(object)val == (Object)(object)not) && !val.HasAttachedHands() && ((Component)val).gameObject.activeInHierarchy && PathOf(val, thing) == grip.grip)
+				if (!(grip == null) && !(grip == not) && !grip.HasAttachedHands() && grip.gameObject.activeInHierarchy && PathOf(grip, thing) == grip2.grip)
 				{
-					result = val;
+					result = grip;
 					num = num3;
 					break;
 				}
@@ -578,7 +576,7 @@ public static class GripBook
 		}
 		itemsAt = Time.time + 1f / 30f;
 		OpenControllerRig controllerRig = Player.ControllerRig;
-		if (!((Object)(object)controllerRig == (Object)null) && !((Object)(object)controllerRig.vrRoot == (Object)null) && !((Object)(object)controllerRig.headset == (Object)null))
+		if (!(controllerRig == null) && !(controllerRig.vrRoot == null) && !(controllerRig.headset == null))
 		{
 			if (items == null)
 			{
@@ -591,10 +589,10 @@ public static class GripBook
 			StringBuilder stringBuilder = new StringBuilder();
 			stringBuilder.Append(Time.time.ToString("0.000", CultureInfo.InvariantCulture));
 			stringBuilder.Append(',').Append(P(vrRoot, controllerRig.headset));
-			stringBuilder.Append(',').Append(P(vrRoot, ((Component)((ControllerRig)controllerRig).leftController).transform));
-			stringBuilder.Append(',').Append(P(vrRoot, ((Component)((ControllerRig)controllerRig).rightController).transform));
-			Hand(stringBuilder, vrRoot, Player.LeftHand, ((ControllerRig)controllerRig).leftController);
-			Hand(stringBuilder, vrRoot, Player.RightHand, ((ControllerRig)controllerRig).rightController);
+			stringBuilder.Append(',').Append(P(vrRoot, controllerRig.leftController.transform));
+			stringBuilder.Append(',').Append(P(vrRoot, controllerRig.rightController.transform));
+			Hand(stringBuilder, vrRoot, Player.LeftHand, controllerRig.leftController);
+			Hand(stringBuilder, vrRoot, Player.RightHand, controllerRig.rightController);
 			stringBuilder.Append(',').Append((Time.time - PlayerWatch.FiredAt < 1f / 30f) ? "1" : "0");
 			items.WriteLine(stringBuilder.ToString());
 		}
@@ -602,19 +600,19 @@ public static class GripBook
 
 	private static void Hand(StringBuilder line, Transform root, Hand hand, BaseController controller)
 	{
-		Grip val = Held(hand);
-		Transform val2 = ThingOf(val);
-		if ((Object)(object)val == (Object)null || (Object)(object)val2 == (Object)null)
+		Grip grip = Held(hand);
+		Transform transform = ThingOf(grip);
+		if (grip == null || transform == null)
 		{
-			line.Append(",,,,,").Append(((Object)(object)controller != (Object)null) ? controller._primaryAxis.ToString("0.00", CultureInfo.InvariantCulture) : "0");
+			line.Append(",,,,,").Append((controller != null) ? controller._primaryAxis.ToString("0.00", CultureInfo.InvariantCulture) : "0");
 			return;
 		}
-		line.Append(',').Append(KeyOf(val2).Replace(',', ' '));
-		line.Append(',').Append(PathOf(val, val2).Replace(',', ' '));
-		line.Append(',').Append(P(root, val2));
-		Bot.Pose p = Bot.Pose.Of(val2).Inverse() * Bot.Pose.Of(((Component)hand).transform);
+		line.Append(',').Append(KeyOf(transform).Replace(',', ' '));
+		line.Append(',').Append(PathOf(grip, transform).Replace(',', ' '));
+		line.Append(',').Append(P(root, transform));
+		Bot.Pose p = Bot.Pose.Of(transform).Inverse() * Bot.Pose.Of(hand.transform);
 		line.Append(',').Append(Join(GunMoves.P(p)));
-		line.Append(',').Append(((Object)(object)controller != (Object)null) ? controller._primaryAxis.ToString("0.00", CultureInfo.InvariantCulture) : "0");
+		line.Append(',').Append((controller != null) ? controller._primaryAxis.ToString("0.00", CultureInfo.InvariantCulture) : "0");
 	}
 
 	private static string P(Transform root, Transform t)

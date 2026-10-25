@@ -49,7 +49,7 @@ public static class Movers
 			Add(Player.RigManager, Player.Head, null, you: true, deltaTime);
 			foreach (RigManager item in NetBots.OtherPlayers())
 			{
-				Add(item, ((Object)(object)item != (Object)null && (Object)(object)item.physicsRig != (Object)null) ? ((Rig)item.physicsRig).m_head : null, null, you: false, deltaTime);
+				Add(item, (item != null && item.physicsRig != null) ? item.physicsRig.m_head : null, null, you: false, deltaTime);
 			}
 			foreach (Bot item2 in BotManager.All)
 			{
@@ -87,36 +87,31 @@ public static class Movers
 
 	private static void Add(RigManager rig, Transform head, Bot bot, bool you, float dt)
 	{
-		if ((Object)(object)rig == (Object)null || (Object)(object)head == (Object)null)
+		if (!(rig == null) && !(head == null))
 		{
-			return;
-		}
-		int instanceID = ((Object)rig).GetInstanceID();
-		if (!known.TryGetValue(instanceID, out var value))
-		{
-			value = (known[instanceID] = new Mover());
-		}
-		value.rig = rig;
-		value.head = head;
-		value.bot = bot;
-		value.you = you;
-		value.seen = frame;
-		Vector3 position = head.position;
-		if (value.has)
-		{
-			Vector3 val = position - value.last;
-			if (((Vector3)(ref val)).magnitude < 3f)
+			int instanceID = rig.GetInstanceID();
+			if (!known.TryGetValue(instanceID, out var value))
+			{
+				value = (known[instanceID] = new Mover());
+			}
+			value.rig = rig;
+			value.head = head;
+			value.bot = bot;
+			value.you = you;
+			value.seen = frame;
+			Vector3 position = head.position;
+			if (value.has && (position - value.last).magnitude < 3f)
 			{
 				value.velocity = Vector3.Lerp(value.velocity, (position - value.last) / dt, Mathf.Clamp01(dt * 8f));
-				goto IL_00ca;
 			}
+			else
+			{
+				value.velocity = Vector3.zero;
+			}
+			value.last = position;
+			value.has = true;
+			All.Add(value);
 		}
-		value.velocity = Vector3.zero;
-		goto IL_00ca;
-		IL_00ca:
-		value.last = position;
-		value.has = true;
-		All.Add(value);
 	}
 
 	public static void Forget()

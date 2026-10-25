@@ -6,7 +6,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using BoneLib;
-using Il2CppInterop.Runtime.InteropTypes;
 using Il2CppSLZ.Marrow;
 using Il2CppSLZ.Marrow.Pool;
 using MelonLoader;
@@ -135,13 +134,13 @@ public static class Lab
 		}
 		telemetry = null;
 		events = null;
-		if ((Object)(object)camera != (Object)null)
+		if (camera != null)
 		{
-			Object.Destroy((Object)(object)((Component)camera).gameObject);
+			UnityEngine.Object.Destroy(camera.gameObject);
 		}
-		if ((Object)(object)picture != (Object)null)
+		if (picture != null)
 		{
-			Object.Destroy((Object)(object)picture);
+			UnityEngine.Object.Destroy(picture);
 		}
 		camera = null;
 		picture = null;
@@ -451,51 +450,14 @@ public static class Lab
 				break;
 			}
 			case "legs":
-			{
-				string[] obj = new string[14]
-				{
-					"legs, you: ",
-					Bot.LegsOf(Player.RigManager),
-					", last jump ",
-					(Time.time - Recorder.PlayerJumpedAt).ToString("0.0"),
-					" s ago, time x",
-					Time.timeScale.ToString("0.00"),
-					", gravity ",
-					null,
-					null,
-					null,
-					null,
-					null,
-					null,
-					null
-				};
-				Vector3 val = Physics.gravity;
-				obj[7] = val.y.ToString("0.0");
-				obj[8] = ", avatar ";
-				obj[9] = (((Object)(object)Player.RigManager != (Object)null && (Object)(object)Player.RigManager.avatar != (Object)null) ? ((Object)Player.RigManager.avatar).name : "?");
-				obj[10] = ", speed ";
-				object obj2;
-				if (!((Object)(object)Player.PhysicsRig != (Object)null) || !((Object)(object)((Rig)Player.PhysicsRig).m_pelvis != (Object)null))
-				{
-					obj2 = "?";
-				}
-				else
-				{
-					val = ((Component)((Rig)Player.PhysicsRig).m_pelvis).GetComponent<Rigidbody>().velocity;
-					obj2 = ((Vector3)(ref val)).ToString("0.0");
-				}
-				obj[11] = (string)obj2;
-				obj[12] = ", moves ";
-				obj[13] = MoveSlots.State();
-				Event(string.Concat(obj));
+				Event("legs, you: " + Bot.LegsOf(Player.RigManager) + ", last jump " + (Time.time - Recorder.PlayerJumpedAt).ToString("0.0") + " s ago, time x" + Time.timeScale.ToString("0.00") + ", gravity " + Physics.gravity.y.ToString("0.0") + ", avatar " + ((Player.RigManager != null && Player.RigManager.avatar != null) ? Player.RigManager.avatar.name : "?") + ", speed " + ((Player.PhysicsRig != null && Player.PhysicsRig.m_pelvis != null) ? Player.PhysicsRig.m_pelvis.GetComponent<Rigidbody>().velocity.ToString("0.0") : "?") + ", moves " + MoveSlots.State());
 				{
 					foreach (Bot item17 in BotManager.All)
 					{
-						Event("legs, bot " + item17.Name + ": game last asked for its hands " + (Time.frameCount - item17.LastDriveFrame) + " frame(s) ago, " + Bot.LegsOf(item17.rig) + ", same legs as yours: " + ((Object)(object)Player.RigManager != (Object)null && ((Il2CppObjectBase)(object)item17.rig.remapHeptaRig).Pointer == ((Il2CppObjectBase)(object)Player.RigManager.remapHeptaRig).Pointer));
+						Event("legs, bot " + item17.Name + ": game last asked for its hands " + (Time.frameCount - item17.LastDriveFrame) + " frame(s) ago, " + Bot.LegsOf(item17.rig) + ", same legs as yours: " + (Player.RigManager != null && item17.rig.remapHeptaRig.Pointer == Player.RigManager.remapHeptaRig.Pointer));
 					}
 					break;
 				}
-			}
 			case "voice":
 			{
 				foreach (Bot item18 in BotManager.All)
@@ -734,32 +696,9 @@ public static class Lab
 		}
 		static string Of(RigManager r)
 		{
-			if (!((Object)(object)r == (Object)null) && !((Object)(object)r.avatar == (Object)null))
+			if (!(r == null) && !(r.avatar == null))
 			{
-				string[] obj3 = new string[10]
-				{
-					BotRig.AvatarOf(r),
-					" root ",
-					null,
-					null,
-					null,
-					null,
-					null,
-					null,
-					null,
-					null
-				};
-				Vector3 val2 = ((Component)r.avatar).transform.localScale;
-				obj3[2] = ((Vector3)(ref val2)).ToString("0.000");
-				obj3[3] = " world ";
-				val2 = ((Component)r.avatar).transform.lossyScale;
-				obj3[4] = val2.y.ToString("0.000");
-				obj3[5] = " eyes ";
-				obj3[6] = (r.avatar.eyeHeight * ((Component)r.avatar).transform.lossyScale.y).ToString("0.00");
-				obj3[7] = " m (asset eyes ";
-				obj3[8] = r.avatar.eyeHeight.ToString("0.00");
-				obj3[9] = ")";
-				return string.Concat(obj3);
+				return BotRig.AvatarOf(r) + " root " + r.avatar.transform.localScale.ToString("0.000") + " world " + r.avatar.transform.lossyScale.y.ToString("0.000") + " eyes " + (r.avatar.eyeHeight * r.avatar.transform.lossyScale.y).ToString("0.00") + " m (asset eyes " + r.avatar.eyeHeight.ToString("0.00") + ")";
 			}
 			return "none";
 		}
@@ -771,7 +710,7 @@ public static class Lab
 		{
 			return which;
 		}
-		FieldInfo[] fields = typeof(Guns).GetFields(BindingFlags.Static | BindingFlags.Public);
+		FieldInfo[] fields = typeof(CommonBarcodes.Guns).GetFields(BindingFlags.Static | BindingFlags.Public);
 		foreach (FieldInfo fieldInfo in fields)
 		{
 			if (fieldInfo.FieldType == typeof(string) && string.Equals(fieldInfo.Name, which, StringComparison.OrdinalIgnoreCase))
@@ -817,26 +756,20 @@ public static class Lab
 				bot = enumerator.Current;
 			}
 		}
-		Transform val = ((bot != null && (Object)(object)bot.Head != (Object)null) ? bot.Head : Player.Head);
-		if ((Object)(object)val == (Object)null)
+		Transform transform = ((bot != null && bot.Head != null) ? bot.Head : Player.Head);
+		if (transform == null)
 		{
 			return;
 		}
 		for (int i = 0; i < count; i++)
 		{
-			if (!Navigator.RandomPlace(val.position - Vector3.up * 1.4f, far * 0.75f, far * 1.25f, out var place))
+			if (!Navigator.RandomPlace(transform.position - Vector3.up * 1.4f, far * 0.75f, far * 1.25f, out var place))
 			{
-				place = val.position + Quaternion.Euler(0f, Random.Range(0f, 360f), 0f) * Vector3.forward * far;
+				place = transform.position + Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f) * Vector3.forward * far;
 			}
-			if ((Object)(object)Player.Head != (Object)null)
+			if (Player.Head != null && (place - Player.Head.position).magnitude < 3f)
 			{
-				Vector3 val2 = place - Player.Head.position;
-				if (((Vector3)(ref val2)).magnitude < 3f)
-				{
-					Vector3 val3 = place;
-					val2 = place - Player.Head.position;
-					place = val3 + ((Vector3)(ref val2)).normalized * 3f;
-				}
+				place += (place - Player.Head.position).normalized * 3f;
 			}
 			labSpawn.Invoke(null, new object[2] { kind, place });
 		}
@@ -853,34 +786,28 @@ public static class Lab
 				bot = enumerator.Current;
 			}
 		}
-		Transform val = ((bot != null && (Object)(object)bot.Head != (Object)null) ? bot.Head : Player.Head);
-		if ((Object)(object)val == (Object)null)
+		Transform transform = ((bot != null && bot.Head != null) ? bot.Head : Player.Head);
+		if (transform == null)
 		{
 			return;
 		}
 		for (int i = 0; i < count; i++)
 		{
-			if (!Navigator.RandomPlace(val.position - Vector3.up * 1.4f, far * 0.85f, far * 1.15f, out var place))
+			if (!Navigator.RandomPlace(transform.position - Vector3.up * 1.4f, far * 0.85f, far * 1.15f, out var place))
 			{
-				place = val.position - Vector3.up * 1.4f + Quaternion.Euler(0f, Random.Range(0f, 360f), 0f) * Vector3.forward * far;
+				place = transform.position - Vector3.up * 1.4f + Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f) * Vector3.forward * far;
 			}
-			if ((Object)(object)Player.Head != (Object)null)
+			if (Player.Head != null && (place - Player.Head.position).magnitude < 6f)
 			{
-				Vector3 val2 = place - Player.Head.position;
-				if (((Vector3)(ref val2)).magnitude < 6f)
-				{
-					Vector3 val3 = place;
-					val2 = place - Player.Head.position;
-					place = val3 + ((Vector3)(ref val2)).normalized * 6f;
-				}
+				place += (place - Player.Head.position).normalized * 6f;
 			}
-			HelperMethods.SpawnCrate("c1534c5a-3fd8-4d50-9eaf-0695466f7264", place, Quaternion.identity, Vector3.one, false, (Action<GameObject>)delegate(GameObject made)
+			HelperMethods.SpawnCrate("c1534c5a-3fd8-4d50-9eaf-0695466f7264", place, Quaternion.identity, Vector3.one, ignorePolicy: false, delegate(GameObject made)
 			{
-				if ((Object)(object)made != (Object)null)
+				if (made != null)
 				{
 					fords.Add(made);
 				}
-			}, (Action<GameObject>)null);
+			});
 		}
 		Event("spawned " + count + " Ford about " + far.ToString("0") + " m out");
 	}
@@ -889,16 +816,16 @@ public static class Lab
 	{
 		foreach (GameObject ford in fords)
 		{
-			if (!((Object)(object)ford == (Object)null))
+			if (!(ford == null))
 			{
 				Poolee componentInParent = ford.GetComponentInParent<Poolee>();
-				if ((Object)(object)componentInParent != (Object)null)
+				if (componentInParent != null)
 				{
 					componentInParent.Despawn();
 				}
 				else
 				{
-					Object.Destroy((Object)(object)ford);
+					UnityEngine.Object.Destroy(ford);
 				}
 			}
 		}
@@ -972,7 +899,7 @@ public static class Lab
 			{
 				BotManager.SetModeAll(Bot.Mode.Brain);
 			}
-			SpawnEnemies(Random.Range(1, 5), Random.Range(6f, 18f), (Random.value < 0.25f) ? "fast" : "zombie");
+			SpawnEnemies(UnityEngine.Random.Range(1, 5), UnityEngine.Random.Range(6f, 18f), (UnityEngine.Random.value < 0.25f) ? "fast" : "zombie");
 			roundStart = Time.time;
 			roundEndAt = -1f;
 			killsAtStart = Knowledge.Data.kills;
@@ -986,20 +913,20 @@ public static class Lab
 	{
 		try
 		{
-			Health val = (((Object)(object)Player.RigManager != (Object)null) ? Player.RigManager.health : null);
-			if (!((Object)(object)val == (Object)null))
+			Health health = ((Player.RigManager != null) ? Player.RigManager.health : null);
+			if (!(health == null))
 			{
-				if (Safe && (int)val.healthMode != 0)
+				if (Safe && health.healthMode != 0)
 				{
-					val.SetHealthMode(0);
+					health.SetHealthMode(0);
 				}
-				else if (!Safe && (int)val.healthMode == 0)
+				else if (!Safe && health.healthMode == Health.HealthMode.Invincible)
 				{
-					val.SetHealthMode(1);
+					health.SetHealthMode(1);
 				}
 				if (Safe)
 				{
-					val.SetFullHealth();
+					health.SetFullHealth();
 				}
 			}
 		}
@@ -1013,115 +940,40 @@ public static class Lab
 		try
 		{
 			RigManager rigManager = Player.RigManager;
-			if ((Object)(object)rigManager == (Object)null || (Object)(object)rigManager.remapHeptaRig == (Object)null)
+			if (rigManager == null || rigManager.remapHeptaRig == null)
 			{
 				return;
 			}
-			OpenControllerRig val = ((Il2CppObjectBase)(object)rigManager.ControllerRig).TryCast<OpenControllerRig>();
-			bool flag = (Object)(object)val != (Object)null && (((ControllerRig)val)._primaryStick || ((ControllerRig)val)._secondaryStick);
+			OpenControllerRig openControllerRig = rigManager.ControllerRig.TryCast<OpenControllerRig>();
+			bool flag = openControllerRig != null && (openControllerRig._primaryStick || openControllerRig._secondaryStick);
 			bool flag2 = false;
 			string text = "";
-			if ((Object)(object)val != (Object)null)
+			if (openControllerRig != null)
 			{
-				BaseController[] array = (BaseController[])(object)new BaseController[2]
+				BaseController[] array = new BaseController[2] { openControllerRig.leftController, openControllerRig.rightController };
+				foreach (BaseController baseController in array)
 				{
-					((ControllerRig)val).leftController,
-					((ControllerRig)val).rightController
-				};
-				foreach (BaseController val2 in array)
-				{
-					if (!((Object)(object)val2 == (Object)null))
+					if (!(baseController == null))
 					{
-						bool thumbStick = val2.GetThumbStick();
+						bool thumbStick = baseController.GetThumbStick();
 						flag2 = flag2 || thumbStick;
-						text = text + (((Object)(object)val2 == (Object)(object)((ControllerRig)val).leftController) ? " left " : " right ") + (thumbStick ? "DOWN" : "up");
+						text = text + ((baseController == openControllerRig.leftController) ? " left " : " right ") + (thumbStick ? "DOWN" : "up");
 					}
 				}
 			}
-			string[] array2 = new string[7];
-			TraversalState travState = rigManager.remapHeptaRig.travState;
-			array2[0] = ((object)(TraversalState)(ref travState)).ToString();
-			array2[1] = ", rig click ";
-			array2[2] = (((Object)(object)val != (Object)null) ? (((ControllerRig)val)._primaryStick + "/" + ((ControllerRig)val)._secondaryStick) : "?");
-			array2[3] = ", sticks";
-			array2[4] = text;
-			array2[5] = ", body ";
-			BodyState bodyState = rigManager.bodyState;
-			array2[6] = ((object)(BodyState)(ref bodyState)).ToString();
-			string text2 = string.Concat(array2);
-			Rigidbody val3 = (((Object)(object)Player.PhysicsRig != (Object)null && (Object)(object)((Rig)Player.PhysicsRig).m_pelvis != (Object)null) ? ((Component)((Rig)Player.PhysicsRig).m_pelvis).GetComponent<Rigidbody>() : null);
-			float num;
-			Vector2 val4;
-			if (!((Object)(object)val3 != (Object)null))
+			string text2 = rigManager.remapHeptaRig.travState.ToString() + ", rig click " + ((openControllerRig != null) ? (openControllerRig._primaryStick + "/" + openControllerRig._secondaryStick) : "?") + ", sticks" + text + ", body " + rigManager.bodyState;
+			Rigidbody rigidbody = ((Player.PhysicsRig != null && Player.PhysicsRig.m_pelvis != null) ? Player.PhysicsRig.m_pelvis.GetComponent<Rigidbody>() : null);
+			float num = ((rigidbody != null) ? new Vector2(rigidbody.velocity.x, rigidbody.velocity.z).magnitude : 0f);
+			if (openControllerRig != null && openControllerRig._axisPrimary.magnitude > 0.5f && Time.time - youSpeedAt > 0.5f)
 			{
-				num = 0f;
-			}
-			else
-			{
-				val4 = new Vector2(val3.velocity.x, val3.velocity.z);
-				num = ((Vector2)(ref val4)).magnitude;
-			}
-			float num2 = num;
-			if ((Object)(object)val != (Object)null)
-			{
-				val4 = ((ControllerRig)val)._axisPrimary;
-				if (((Vector2)(ref val4)).magnitude > 0.5f && Time.time - youSpeedAt > 0.5f)
-				{
-					youSpeedAt = Time.time;
-					string[] obj = new string[12]
-					{
-						"you: going ",
-						num2.ToString("0.0"),
-						" m/s, ",
-						null,
-						null,
-						null,
-						null,
-						null,
-						null,
-						null,
-						null,
-						null
-					};
-					travState = rigManager.remapHeptaRig.travState;
-					obj[3] = ((object)(TraversalState)(ref travState)).ToString();
-					obj[4] = ", legs' own ";
-					val4 = rigManager.remapHeptaRig._currentVelocity;
-					obj[5] = ((Vector2)(ref val4)).magnitude.ToString("0.0");
-					obj[6] = ", most now ";
-					obj[7] = rigManager.remapHeptaRig.currentMaxVelocity.ToString("0.0");
-					obj[8] = " of ";
-					obj[9] = rigManager.remapHeptaRig.maxVelocity.ToString("0.00");
-					obj[10] = ", crouch ";
-					obj[11] = rigManager.remapHeptaRig._crouchTarget.ToString("0.00");
-					Event(string.Concat(obj));
-				}
+				youSpeedAt = Time.time;
+				Event("you: going " + num.ToString("0.0") + " m/s, " + rigManager.remapHeptaRig.travState.ToString() + ", legs' own " + rigManager.remapHeptaRig._currentVelocity.magnitude.ToString("0.0") + ", most now " + rigManager.remapHeptaRig.currentMaxVelocity.ToString("0.0") + " of " + rigManager.remapHeptaRig.maxVelocity.ToString("0.00") + ", crouch " + rigManager.remapHeptaRig._crouchTarget.ToString("0.00"));
 			}
 			if (text2 != youWas || (flag || flag2) != youClickWas)
 			{
 				youWas = text2;
 				youClickWas = flag || flag2;
-				string[] obj2 = new string[6]
-				{
-					"you: ",
-					text2,
-					", top speed ",
-					rigManager.remapHeptaRig.maxVelocity.ToString("0.00"),
-					", stick ",
-					null
-				};
-				object obj3;
-				if (!((Object)(object)val != (Object)null))
-				{
-					obj3 = "?";
-				}
-				else
-				{
-					val4 = ((ControllerRig)val)._axisPrimary;
-					obj3 = ((Vector2)(ref val4)).ToString("0.0");
-				}
-				obj2[5] = (string)obj3;
-				Event(string.Concat(obj2));
+				Event("you: " + text2 + ", top speed " + rigManager.remapHeptaRig.maxVelocity.ToString("0.00") + ", stick " + ((openControllerRig != null) ? openControllerRig._axisPrimary.ToString("0.0") : "?"));
 			}
 		}
 		catch (Exception)
@@ -1202,72 +1054,72 @@ public static class Lab
 	public static void Snap(Bot bot, string view)
 	{
 		Transform head = bot.Head;
-		if ((Object)(object)head == (Object)null)
+		if (head == null)
 		{
 			return;
 		}
 		try
 		{
-			if ((Object)(object)camera == (Object)null)
+			if (camera == null)
 			{
 				camera = new GameObject("ThirdEyeLabCamera").AddComponent<Camera>();
-				((Behaviour)camera).enabled = false;
+				camera.enabled = false;
 				camera.fieldOfView = 55f;
 				camera.nearClipPlane = 0.03f;
-				camera.stereoTargetEye = (StereoTargetEyeMask)0;
+				camera.stereoTargetEye = StereoTargetEyeMask.None;
 				picture = new RenderTexture(800, 600, 24);
 				camera.targetTexture = picture;
 			}
 			Vector3 facing = bot.Facing;
-			Vector3 val = Vector3.Cross(Vector3.up, facing);
-			Vector3 val2 = head.position - Vector3.up * 0.35f;
-			Vector3 val3 = val2;
-			Vector3 val4;
+			Vector3 vector = Vector3.Cross(Vector3.up, facing);
+			Vector3 vector2 = head.position - Vector3.up * 0.35f;
+			Vector3 vector3 = vector2;
+			Vector3 vector4;
 			switch (view)
 			{
 			case "side":
-				val4 = val2 + val * 2.2f + Vector3.up * 0.2f;
+				vector4 = vector2 + vector * 2.2f + Vector3.up * 0.2f;
 				break;
 			case "back":
-				val4 = val2 - facing * 2.2f + Vector3.up * 0.3f;
+				vector4 = vector2 - facing * 2.2f + Vector3.up * 0.3f;
 				break;
 			case "top":
-				val4 = val2 + Vector3.up * 2.5f + facing * 0.5f;
+				vector4 = vector2 + Vector3.up * 2.5f + facing * 0.5f;
 				break;
 			case "map":
-				val4 = val2 + Vector3.up * 40f - facing * 0.5f;
+				vector4 = vector2 + Vector3.up * 40f - facing * 0.5f;
 				break;
 			case "far":
-				val4 = val2 - facing * 9f + Vector3.up * 5f;
+				vector4 = vector2 - facing * 9f + Vector3.up * 5f;
 				break;
 			case "hand":
 			{
 				Transform frontHandTransform = bot.FrontHandTransform;
-				val3 = (((Object)(object)frontHandTransform != (Object)null) ? frontHandTransform.position : val2);
-				val4 = val3 + facing * 0.45f - val * 0.55f - Vector3.up * 0.12f;
+				vector3 = ((frontHandTransform != null) ? frontHandTransform.position : vector2);
+				vector4 = vector3 + facing * 0.45f - vector * 0.55f - Vector3.up * 0.12f;
 				break;
 			}
 			case "gun":
 			{
 				Transform gunHandTransform = bot.GunHandTransform;
-				val3 = (((Object)(object)gunHandTransform != (Object)null) ? gunHandTransform.position : val2);
-				val4 = val3 + facing * 0.7f + val * 0.6f + Vector3.up * 0.25f;
+				vector3 = ((gunHandTransform != null) ? gunHandTransform.position : vector2);
+				vector4 = vector3 + facing * 0.7f + vector * 0.6f + Vector3.up * 0.25f;
 				break;
 			}
 			default:
-				val4 = val2 + facing * 2.4f + val * 0.6f + Vector3.up * 0.15f;
+				vector4 = vector2 + facing * 2.4f + vector * 0.6f + Vector3.up * 0.15f;
 				break;
 			}
-			((Component)camera).transform.SetPositionAndRotation(val4, Quaternion.LookRotation(val3 - val4, Vector3.up));
+			camera.transform.SetPositionAndRotation(vector4, Quaternion.LookRotation(vector3 - vector4, Vector3.up));
 			camera.Render();
 			RenderTexture active = RenderTexture.active;
 			RenderTexture.active = picture;
-			Texture2D val5 = new Texture2D(((Texture)picture).width, ((Texture)picture).height, (TextureFormat)3, false);
-			val5.ReadPixels(new Rect(0f, 0f, (float)((Texture)picture).width, (float)((Texture)picture).height), 0, 0);
-			val5.Apply();
+			Texture2D texture2D = new Texture2D(picture.width, picture.height, TextureFormat.RGB24, mipChain: false);
+			texture2D.ReadPixels(new Rect(0f, 0f, picture.width, picture.height), 0, 0);
+			texture2D.Apply();
 			RenderTexture.active = active;
-			byte[] bytes = ImageConversion.EncodeToPNG(val5);
-			Object.Destroy((Object)val5);
+			byte[] bytes = texture2D.EncodeToPNG();
+			UnityEngine.Object.Destroy(texture2D);
 			snaps++;
 			string path = Path.Combine(Folder, "snap_" + snaps.ToString("000") + "_" + view + ".png");
 			File.WriteAllBytes(path, bytes);

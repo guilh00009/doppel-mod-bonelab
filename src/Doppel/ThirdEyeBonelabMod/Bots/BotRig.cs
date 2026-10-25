@@ -1,6 +1,5 @@
 using System;
 using BoneLib;
-using Il2CppInterop.Runtime.InteropTypes;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Il2CppSLZ.Bonelab;
 using Il2CppSLZ.Marrow;
@@ -8,7 +7,6 @@ using Il2CppSLZ.Marrow.Interaction;
 using Il2CppSLZ.Marrow.Pool;
 using Il2CppSLZ.Marrow.Warehouse;
 using Il2CppSLZ.VRMK;
-using Il2CppSystem;
 using MelonLoader;
 using UnityEngine;
 
@@ -20,9 +18,9 @@ public static class BotRig
 
 	public static bool IsBot(RigManager rig)
 	{
-		if ((Object)(object)rig != (Object)null)
+		if (rig != null)
 		{
-			return ((Object)((Component)rig).gameObject).name == "[RigManager (Bot)]";
+			return rig.gameObject.name == "[RigManager (Bot)]";
 		}
 		return false;
 	}
@@ -30,13 +28,13 @@ public static class BotRig
 	public static void Create(Vector3 feet, Vector3 forward, Action<RigManager> made)
 	{
 		MarrowSettings runtimeInstance = MarrowSettings.RuntimeInstance;
-		SpawnableCrate val = (((Object)(object)runtimeInstance != (Object)null && runtimeInstance.DefaultPlayerRig != null) ? ((CrateReferenceT<SpawnableCrate>)(object)runtimeInstance.DefaultPlayerRig).Crate : null);
-		if ((Object)(object)val == (Object)null)
+		SpawnableCrate spawnableCrate = ((runtimeInstance != null && runtimeInstance.DefaultPlayerRig != null) ? runtimeInstance.DefaultPlayerRig.Crate : null);
+		if (spawnableCrate == null)
 		{
 			Spawnables.Notify("The game's player rig could not be found");
 			return;
 		}
-		((MarrowAssetT<GameObject>)(object)((GameObjectCrate)val).MainGameObject).LoadAsset(Action<GameObject>.op_Implicit((Action<GameObject>)delegate(GameObject asset)
+		spawnableCrate.MainGameObject.LoadAsset((Action<GameObject>)delegate(GameObject asset)
 		{
 			try
 			{
@@ -46,144 +44,144 @@ public static class BotRig
 			{
 				MelonLogger.Error("The bot's body could not be made: " + ex);
 			}
-		}));
+		});
 	}
 
 	private static RigManager Make(GameObject asset, Vector3 feet, Vector3 forward)
 	{
-		RigManager obj = (((Object)(object)asset != (Object)null) ? asset.GetComponentInChildren<RigManager>(true) : null);
-		if ((Object)(object)obj == (Object)null)
+		RigManager obj = ((asset != null) ? asset.GetComponentInChildren<RigManager>(includeInactive: true) : null);
+		if (obj == null)
 		{
 			throw new InvalidOperationException("the player rig has no RigManager");
 		}
-		GameObject val = new GameObject("ThirdEyeBotHolder");
-		val.SetActive(false);
-		GameObject obj2 = Object.Instantiate<GameObject>(((Component)obj).gameObject, val.transform);
-		((Object)obj2).name = "[RigManager (Bot)]";
-		obj2.SetActive(false);
-		obj2.transform.position = feet;
-		obj2.transform.rotation = Quaternion.LookRotation(forward, Vector3.up);
-		RigManager component = obj2.GetComponent<RigManager>();
+		GameObject gameObject = new GameObject("ThirdEyeBotHolder");
+		gameObject.SetActive(value: false);
+		GameObject gameObject2 = UnityEngine.Object.Instantiate(obj.gameObject, gameObject.transform);
+		gameObject2.name = "[RigManager (Bot)]";
+		gameObject2.SetActive(value: false);
+		gameObject2.transform.position = feet;
+		gameObject2.transform.rotation = Quaternion.LookRotation(forward, Vector3.up);
+		RigManager component = gameObject2.GetComponent<RigManager>();
 		Strip(component);
-		obj2.transform.parent = null;
-		Object.Destroy((Object)(object)val);
-		obj2.SetActive(true);
+		gameObject2.transform.parent = null;
+		UnityEngine.Object.Destroy(gameObject);
+		gameObject2.SetActive(value: true);
 		Hear(component);
 		return component;
 	}
 
 	private static void Strip(RigManager rig)
 	{
-		OpenControllerRig val = ((Il2CppObjectBase)(object)rig.ControllerRig).TryCast<OpenControllerRig>();
+		OpenControllerRig openControllerRig = rig.ControllerRig.TryCast<OpenControllerRig>();
 		PhysicsRig physicsRig = rig.physicsRig;
 		RemovePlayerTag(physicsRig.marrowEntity);
-		foreach (MarrowBody componentsInChild in ((Component)val).GetComponentsInChildren<MarrowBody>(true))
+		foreach (MarrowBody componentsInChild in openControllerRig.GetComponentsInChildren<MarrowBody>(includeInactive: true))
 		{
-			Object.DestroyImmediate((Object)(object)componentsInChild);
+			UnityEngine.Object.DestroyImmediate(componentsInChild);
 		}
-		foreach (Tracker componentsInChild2 in ((Component)val).GetComponentsInChildren<Tracker>(true))
+		foreach (Tracker componentsInChild2 in openControllerRig.GetComponentsInChildren<Tracker>(includeInactive: true))
 		{
-			Object.DestroyImmediate((Object)(object)((Component)componentsInChild2).gameObject);
+			UnityEngine.Object.DestroyImmediate(componentsInChild2.gameObject);
 		}
-		MarrowEntity component = ((Component)val).GetComponent<MarrowEntity>();
-		if ((Object)(object)component != (Object)null)
+		MarrowEntity component = openControllerRig.GetComponent<MarrowEntity>();
+		if (component != null)
 		{
-			Object.DestroyImmediate((Object)(object)component);
+			UnityEngine.Object.DestroyImmediate(component);
 		}
-		Player_Health val2 = (((Object)(object)rig.health != (Object)null) ? ((Il2CppObjectBase)(object)rig.health).TryCast<Player_Health>() : null);
-		if ((Object)(object)val2 != (Object)null)
+		Player_Health player_Health = ((rig.health != null) ? rig.health.TryCast<Player_Health>() : null);
+		if (player_Health != null)
 		{
-			val2.reloadLevelOnDeath = false;
-			val2.slowMoOnDeath = false;
-			((Health)val2).healthMode = (HealthMode)0;
-			if ((Object)(object)val2.Vignetter != (Object)null)
+			player_Health.reloadLevelOnDeath = false;
+			player_Health.slowMoOnDeath = false;
+			player_Health.healthMode = Health.HealthMode.Invincible;
+			if (player_Health.Vignetter != null)
 			{
-				GameObject val3 = Object.Instantiate<GameObject>(val2.Vignetter);
-				SkinnedMeshRenderer component2 = val3.GetComponent<SkinnedMeshRenderer>();
-				if ((Object)(object)component2 != (Object)null)
+				GameObject gameObject = UnityEngine.Object.Instantiate(player_Health.Vignetter);
+				SkinnedMeshRenderer component2 = gameObject.GetComponent<SkinnedMeshRenderer>();
+				if (component2 != null)
 				{
-					((Renderer)component2).enabled = false;
+					component2.enabled = false;
 				}
-				((Object)val3).name = "ThirdEyeBotVignetter";
-				val3.SetActive(false);
-				val2.Vignetter = val3;
+				gameObject.name = "ThirdEyeBotVignetter";
+				gameObject.SetActive(value: false);
+				player_Health.Vignetter = gameObject;
 			}
 		}
-		val.quickmenuEnabled = false;
-		val._timeInput = false;
+		openControllerRig.quickmenuEnabled = false;
+		openControllerRig._timeInput = false;
 		rig.remapHeptaRig.doubleJump = false;
-		Transform headset = val.headset;
+		Transform headset = openControllerRig.headset;
 		Blind(headset);
-		val.cameras = new Il2CppReferenceArray<Camera>(0L);
-		val.onLastCameraUpdate = null;
-		((Component)headset).tag = "Untagged";
-		PlayerAvatarArt componentInChildren = ((Component)rig).GetComponentInChildren<PlayerAvatarArt>(true);
-		if ((Object)(object)componentInChildren != (Object)null)
+		openControllerRig.cameras = new Il2CppReferenceArray<Camera>(0L);
+		openControllerRig.onLastCameraUpdate = null;
+		headset.tag = "Untagged";
+		PlayerAvatarArt componentInChildren = rig.GetComponentInChildren<PlayerAvatarArt>(includeInactive: true);
+		if (componentInChildren != null)
 		{
-			Object.DestroyImmediate((Object)(object)componentInChildren);
+			UnityEngine.Object.DestroyImmediate(componentInChildren);
 		}
-		InventoryAmmoReceiver componentInChildren2 = ((Component)rig).GetComponentInChildren<InventoryAmmoReceiver>(true);
-		if ((Object)(object)componentInChildren2 != (Object)null && (Object)(object)((Component)componentInChildren2).GetComponent<Collider>() != (Object)null)
+		InventoryAmmoReceiver componentInChildren2 = rig.GetComponentInChildren<InventoryAmmoReceiver>(includeInactive: true);
+		if (componentInChildren2 != null && componentInChildren2.GetComponent<Collider>() != null)
 		{
-			((Component)componentInChildren2).GetComponent<Collider>().enabled = false;
+			componentInChildren2.GetComponent<Collider>().enabled = false;
 		}
-		Hand[] array = (Hand[])(object)new Hand[2] { physicsRig.leftHand, physicsRig.rightHand };
-		foreach (Hand val4 in array)
+		Hand[] array = new Hand[2] { physicsRig.leftHand, physicsRig.rightHand };
+		foreach (Hand hand in array)
 		{
-			PhysHand val5 = (((Object)(object)val4 != (Object)null) ? ((Component)val4).GetComponent<PhysHand>() : null);
-			if ((Object)(object)val5 != (Object)null && (Object)(object)val5.inventoryPlug != (Object)null)
+			PhysHand physHand = ((hand != null) ? hand.GetComponent<PhysHand>() : null);
+			if (physHand != null && physHand.inventoryPlug != null)
 			{
-				((Collider)val5.inventoryPlug).enabled = false;
-				((Component)val5.inventoryPlug).gameObject.SetActive(false);
+				physHand.inventoryPlug.enabled = false;
+				physHand.inventoryPlug.gameObject.SetActive(value: false);
 			}
 		}
-		foreach (InventorySlotReceiver componentsInChild3 in ((Component)rig).GetComponentsInChildren<InventorySlotReceiver>(true))
+		foreach (InventorySlotReceiver componentsInChild3 in rig.GetComponentsInChildren<InventorySlotReceiver>(includeInactive: true))
 		{
-			foreach (BoxCollider componentsInChild4 in ((Component)componentsInChild3).GetComponentsInChildren<BoxCollider>(true))
+			foreach (BoxCollider componentsInChild4 in componentsInChild3.GetComponentsInChildren<BoxCollider>(includeInactive: true))
 			{
-				if (((Collider)componentsInChild4).isTrigger)
+				if (componentsInChild4.isTrigger)
 				{
 					componentsInChild4.size *= 0.4f;
 				}
 			}
 		}
-		rig.ControllerRig.leftController = Detach(rig.ControllerRig, rig.ControllerRig.leftController, (Handedness)1);
-		rig.ControllerRig.rightController = Detach(rig.ControllerRig, rig.ControllerRig.rightController, (Handedness)2);
-		if ((Object)(object)((Component)physicsRig).GetComponent<Poolee>() == (Object)null)
+		rig.ControllerRig.leftController = Detach(rig.ControllerRig, rig.ControllerRig.leftController, Handedness.LEFT);
+		rig.ControllerRig.rightController = Detach(rig.ControllerRig, rig.ControllerRig.rightController, Handedness.RIGHT);
+		if (physicsRig.GetComponent<Poolee>() == null)
 		{
-			((Component)physicsRig).gameObject.AddComponent<Poolee>();
+			physicsRig.gameObject.AddComponent<Poolee>();
 		}
 	}
 
 	private static BaseController Detach(ControllerRig controls, BaseController original, Handedness side)
 	{
-		GameObject gameObject = ((Component)original).gameObject;
+		GameObject gameObject = original.gameObject;
 		Haptor haptor = original.haptor;
 		UIControllerInput component = gameObject.GetComponent<UIControllerInput>();
-		if ((Object)(object)component != (Object)null)
+		if (component != null)
 		{
-			Object.DestroyImmediate((Object)(object)component);
+			UnityEngine.Object.DestroyImmediate(component);
 		}
-		BaseController val = gameObject.AddComponent<BaseController>();
-		val.contRig = controls;
-		val.handedness = side;
-		if ((Object)(object)haptor != (Object)null)
+		BaseController baseController = gameObject.AddComponent<BaseController>();
+		baseController.contRig = controls;
+		baseController.handedness = side;
+		if (haptor != null)
 		{
-			haptor.device_Controller = val;
+			haptor.device_Controller = baseController;
 			haptor.hapticsAllowed = false;
-			((Behaviour)haptor).enabled = false;
+			haptor.enabled = false;
 		}
-		return val;
+		return baseController;
 	}
 
 	private static void RemovePlayerTag(MarrowEntity entity)
 	{
 		MarrowSettings runtimeInstance = MarrowSettings.RuntimeInstance;
-		if ((Object)(object)entity == (Object)null || (Object)(object)runtimeInstance == (Object)null || runtimeInstance.PlayerTag == null || ((ScannableReference)runtimeInstance.PlayerTag).Barcode == (Barcode)null)
+		if (entity == null || runtimeInstance == null || runtimeInstance.PlayerTag == null || runtimeInstance.PlayerTag.Barcode == null)
 		{
 			return;
 		}
-		string iD = ((ScannableReference)runtimeInstance.PlayerTag).Barcode.ID;
+		string iD = runtimeInstance.PlayerTag.Barcode.ID;
 		TagList tags = entity.Tags;
 		if (tags == null || tags.Tags == null)
 		{
@@ -191,41 +189,41 @@ public static class BotRig
 		}
 		for (int num = tags.Tags.Count - 1; num >= 0; num--)
 		{
-			BoneTagReference val = tags.Tags[num];
-			if (val != null && ((ScannableReference)val).Barcode != (Barcode)null && ((ScannableReference)val).Barcode.ID == iD)
+			BoneTagReference boneTagReference = tags.Tags[num];
+			if (boneTagReference != null && boneTagReference.Barcode != null && boneTagReference.Barcode.ID == iD)
 			{
 				tags.Tags.RemoveAt(num);
 			}
 		}
-		tags.UpdateCache(false);
+		tags.UpdateCache();
 	}
 
 	private static int StripSenses(Transform root)
 	{
 		int num = 0;
-		foreach (Camera componentsInChild in ((Component)root).GetComponentsInChildren<Camera>(true))
+		foreach (Camera componentsInChild in root.GetComponentsInChildren<Camera>(includeInactive: true))
 		{
-			foreach (Component component in ((Component)componentsInChild).GetComponents<Component>())
+			foreach (Component component in componentsInChild.GetComponents<Component>())
 			{
-				if (!((Object)(object)component == (Object)null) && !(component is Transform) && !(component is Camera))
+				if (!(component == null) && !(component is Transform) && !(component is Camera))
 				{
-					Object.DestroyImmediate((Object)(object)component);
+					UnityEngine.Object.DestroyImmediate(component);
 					num++;
 				}
 			}
 			try
 			{
-				Object.DestroyImmediate((Object)(object)componentsInChild);
+				UnityEngine.Object.DestroyImmediate(componentsInChild);
 			}
 			catch (Exception)
 			{
-				((Behaviour)componentsInChild).enabled = false;
+				componentsInChild.enabled = false;
 			}
 			num++;
 		}
-		foreach (AudioListener componentsInChild2 in ((Component)root).GetComponentsInChildren<AudioListener>(true))
+		foreach (AudioListener componentsInChild2 in root.GetComponentsInChildren<AudioListener>(includeInactive: true))
 		{
-			Object.DestroyImmediate((Object)(object)componentsInChild2);
+			UnityEngine.Object.DestroyImmediate(componentsInChild2);
 			num++;
 		}
 		return num;
@@ -233,35 +231,35 @@ public static class BotRig
 
 	private static void Blind(Transform headset)
 	{
-		foreach (Camera componentsInChild in ((Component)headset).GetComponentsInChildren<Camera>(true))
+		foreach (Camera componentsInChild in headset.GetComponentsInChildren<Camera>(includeInactive: true))
 		{
-			foreach (Component component in ((Component)componentsInChild).GetComponents<Component>())
+			foreach (Component component in componentsInChild.GetComponents<Component>())
 			{
-				if (!((Object)(object)component == (Object)null) && !(component is Transform) && !(component is Camera))
+				if (!(component == null) && !(component is Transform) && !(component is Camera))
 				{
-					Object.DestroyImmediate((Object)(object)component);
+					UnityEngine.Object.DestroyImmediate(component);
 				}
 			}
 			try
 			{
-				Object.DestroyImmediate((Object)(object)componentsInChild);
+				UnityEngine.Object.DestroyImmediate(componentsInChild);
 			}
 			catch (Exception)
 			{
-				((Behaviour)componentsInChild).enabled = false;
+				componentsInChild.enabled = false;
 			}
 		}
-		foreach (AudioListener componentsInChild2 in ((Component)headset).GetComponentsInChildren<AudioListener>(true))
+		foreach (AudioListener componentsInChild2 in headset.GetComponentsInChildren<AudioListener>(includeInactive: true))
 		{
-			Object.DestroyImmediate((Object)(object)componentsInChild2);
+			UnityEngine.Object.DestroyImmediate(componentsInChild2);
 		}
 	}
 
 	private static void Hear(RigManager rig)
 	{
-		foreach (AudioSource componentsInChild in ((Component)rig).GetComponentsInChildren<AudioSource>(true))
+		foreach (AudioSource componentsInChild in rig.GetComponentsInChildren<AudioSource>(includeInactive: true))
 		{
-			if ((Object)(object)componentsInChild != (Object)null)
+			if (componentsInChild != null)
 			{
 				componentsInChild.spatialBlend = 1f;
 			}
@@ -270,7 +268,7 @@ public static class BotRig
 
 	public static void HearLate(RigManager rig)
 	{
-		if ((Object)(object)rig != (Object)null)
+		if (rig != null)
 		{
 			Hear(rig);
 		}
@@ -279,10 +277,10 @@ public static class BotRig
 	public static void CopyPlayerAvatar(RigManager rig, Action done)
 	{
 		RigManager rigManager = Player.RigManager;
-		if (!((Object)(object)rig == (Object)null) && !((Object)(object)rigManager == (Object)null) && rigManager.AvatarCrate != null && !(((ScannableReference)rigManager.AvatarCrate).Barcode == (Barcode)null))
+		if (!(rig == null) && !(rigManager == null) && rigManager.AvatarCrate != null && !(rigManager.AvatarCrate.Barcode == null))
 		{
-			Vector3 scale = (((Object)(object)rigManager.avatar != (Object)null) ? ((Component)rigManager.avatar).transform.localScale : Vector3.one);
-			UseAvatar(rig, ((ScannableReference)rigManager.AvatarCrate).Barcode.ID, scale, done);
+			Vector3 scale = ((rigManager.avatar != null) ? rigManager.avatar.transform.localScale : Vector3.one);
+			UseAvatar(rig, rigManager.AvatarCrate.Barcode.ID, scale, done);
 		}
 	}
 
@@ -290,7 +288,7 @@ public static class BotRig
 	{
 		try
 		{
-			return ((Object)(object)rig != (Object)null && rig._avatarCrate != null && ((ScannableReference)rig._avatarCrate).Barcode != (Barcode)null) ? ((ScannableReference)rig._avatarCrate).Barcode.ID : "";
+			return (rig != null && rig._avatarCrate != null && rig._avatarCrate.Barcode != null) ? rig._avatarCrate.Barcode.ID : "";
 		}
 		catch (Exception)
 		{
@@ -302,41 +300,41 @@ public static class BotRig
 	{
 		AvatarCrate crate = null;
 		AssetWarehouse instance = AssetWarehouse.Instance;
-		if ((Object)(object)rig == (Object)null || string.IsNullOrEmpty(barcode) || instance == null || !instance.TryGetCrate<AvatarCrate>(new Barcode(barcode), ref crate) || (Object)(object)crate == (Object)null)
+		if (rig == null || string.IsNullOrEmpty(barcode) || instance == null || !instance.TryGetCrate(new Barcode(barcode), out crate) || crate == null)
 		{
 			done?.Invoke();
 			return;
 		}
-		((MarrowAssetT<GameObject>)(object)((GameObjectCrate)crate).MainGameObject).LoadAsset(Action<GameObject>.op_Implicit((Action<GameObject>)delegate(GameObject asset)
+		crate.MainGameObject.LoadAsset((Action<GameObject>)delegate(GameObject asset)
 		{
 			try
 			{
-				if (!((Object)(object)rig == (Object)null) && !((Object)(object)asset == (Object)null))
+				if (!(rig == null) && !(asset == null))
 				{
-					GameObject val = new GameObject("ThirdEyeBotAvatarHolder");
-					val.SetActive(false);
-					GameObject val2 = Object.Instantiate<GameObject>(asset, val.transform);
-					val2.SetActive(false);
-					((Object)val2).name = ((Object)asset).name;
-					int num = StripSenses(val2.transform);
+					GameObject gameObject = new GameObject("ThirdEyeBotAvatarHolder");
+					gameObject.SetActive(value: false);
+					GameObject gameObject2 = UnityEngine.Object.Instantiate(asset, gameObject.transform);
+					gameObject2.SetActive(value: false);
+					gameObject2.name = asset.name;
+					int num = StripSenses(gameObject2.transform);
 					if (num > 0)
 					{
-						MelonLogger.Msg("Bot Player: took " + num + " camera/listener parts out of the avatar " + ((Object)asset).name);
+						MelonLogger.Msg("Bot Player: took " + num + " camera/listener parts out of the avatar " + asset.name);
 					}
-					val2.transform.localScale = scale;
-					val2.transform.parent = ((Component)rig).transform;
-					Object.Destroy((Object)(object)val);
-					val2.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
-					Avatar componentInParent = val2.GetComponentInParent<Avatar>(true);
-					if ((Object)(object)componentInParent == (Object)null)
+					gameObject2.transform.localScale = scale;
+					gameObject2.transform.parent = rig.transform;
+					UnityEngine.Object.Destroy(gameObject);
+					gameObject2.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+					Il2CppSLZ.VRMK.Avatar componentInParent = gameObject2.GetComponentInParent<Il2CppSLZ.VRMK.Avatar>(includeInactive: true);
+					if (componentInParent == null)
 					{
-						Object.Destroy((Object)(object)val2);
+						UnityEngine.Object.Destroy(gameObject2);
 					}
 					else
 					{
 						HeadsetGuard.SwappedAt = Time.time;
 						rig.SwapAvatar(componentInParent);
-						rig._avatarCrate = new AvatarCrateReference(((Scannable)crate).Barcode);
+						rig._avatarCrate = new AvatarCrateReference(crate.Barcode);
 						Hear(rig);
 						done?.Invoke();
 					}
@@ -346,6 +344,6 @@ public static class BotRig
 			{
 				MelonLogger.Warning("The bot could not take the player's avatar: " + ex.Message);
 			}
-		}));
+		});
 	}
 }

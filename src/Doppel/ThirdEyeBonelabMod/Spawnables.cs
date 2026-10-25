@@ -43,9 +43,9 @@ public static class Spawnables
 		{
 			Notifier.Send(new Notification
 			{
-				Title = NotificationText.op_Implicit("Doppel"),
-				Message = NotificationText.op_Implicit(message),
-				Type = (NotificationType)0,
+				Title = "Doppel",
+				Message = message,
+				Type = NotificationType.Information,
 				PopupLength = 1.5f,
 				ShowTitleOnPopup = true
 			});

@@ -136,13 +136,13 @@ public static class NetBots
 
 	public static bool IsOther(RigManager rig)
 	{
-		if ((Object)(object)rig == (Object)null)
+		if (rig == null)
 		{
 			return false;
 		}
 		foreach (RigManager item in OtherPlayers())
 		{
-			if ((Object)(object)item == (Object)(object)rig)
+			if (item == rig)
 			{
 				return true;
 			}
@@ -365,7 +365,7 @@ public static class NetBots
 				binaryWriter.Write((byte)item.netId);
 				binaryWriter.Write((byte)((item.enemy ? 1u : 0u) | (item.dead ? 2u : 0u)));
 				binaryWriter.Write(BotRig.AvatarOf(item.rig) ?? "");
-				Vector3 v = (((Object)(object)item.rig.avatar != (Object)null) ? ((Component)item.rig.avatar).transform.localScale : Vector3.one);
+				Vector3 v = ((item.rig.avatar != null) ? item.rig.avatar.transform.localScale : Vector3.one);
 				Put(binaryWriter, v);
 				Put(binaryWriter, item.NetFeet);
 				binaryWriter.Write(item.NetYaw);
@@ -578,12 +578,11 @@ public static class NetBots
 
 	private static Quaternion Turn(BinaryReader r)
 	{
-		Quaternion val = default(Quaternion);
-		((Quaternion)(ref val))._002Ector((float)r.ReadInt16() / 32000f, (float)r.ReadInt16() / 32000f, (float)r.ReadInt16() / 32000f, (float)r.ReadInt16() / 32000f);
-		float num = Mathf.Sqrt(val.x * val.x + val.y * val.y + val.z * val.z + val.w * val.w);
+		Quaternion quaternion = new Quaternion((float)r.ReadInt16() / 32000f, (float)r.ReadInt16() / 32000f, (float)r.ReadInt16() / 32000f, (float)r.ReadInt16() / 32000f);
+		float num = Mathf.Sqrt(quaternion.x * quaternion.x + quaternion.y * quaternion.y + quaternion.z * quaternion.z + quaternion.w * quaternion.w);
 		if (!(num < 0.5f))
 		{
-			return new Quaternion(val.x / num, val.y / num, val.z / num, val.w / num);
+			return new Quaternion(quaternion.x / num, quaternion.y / num, quaternion.z / num, quaternion.w / num);
 		}
 		return Quaternion.identity;
 	}

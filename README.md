@@ -4,8 +4,9 @@ Decompiled C# source of **Doppel 1.4.0** by **RUDYHILL** (Thunderstore: `Rudyhil
 an AI-bot code mod for BONELAB. All credit for the mod goes to its author.
 
 - Source DLL: `Mods/Doppel.dll`, SHA-256 `7114be14755f4e6910fd7e1cc6687cff8db79fc6793ace77978e941d479e3b31`
-- Decompiler: ILSpy (`ilspycmd` 8.2.0.7535), whole-project mode
-- Mod deps: MelonLoader 0.7.3, BoneLib 3.1.3, optional LabFusion
+- Decompiler: ILSpy (`ilspycmd` 8.2.0.7535), whole-project mode, with the game's `Il2CppAssemblies`,
+  BoneLib 3.1.3, LabFusion and MelonLoader 0.7.3 as references, so every type resolved
+- Mod deps: MelonLoader 0.7.3, BoneLib 3.1.3, optional LabFusion, optional `Portals` code mod
 
 The `[MelonInfo]` attribute inside the DLL still says version `1.3.0`, even though the package is 1.4.0.
 
@@ -39,18 +40,31 @@ Main pieces in `ThirdEyeBonelabMod/Bots`:
 
 ## Building
 
-Building needs the game's interop assemblies, which MelonLoader generates on first launch. They are
-not in this repo. Install MelonLoader 0.7.3, BoneLib and (for `FusionLink.cs`) LabFusion, run the game
-once, then:
+You need the game's interop assemblies, which MelonLoader generates on the first launch of BONELAB.
+They are not in this repo. Install MelonLoader 0.7.3, BoneLib and LabFusion, run the game once, then:
 
 ```
 dotnet build src/Doppel/Doppel.csproj -c Release -p:BonelabPath="<path to BONELAB>"
 ```
 
-The project was decompiled without those game assemblies. Before committing, I stripped ILSpy's
-`//IL_xxxx: Unknown result type ...` comments, which only noted the missing references. If a spot
-doesn't compile once the references are in place (usually a missing cast or an Il2Cpp enum
-comparison), re-run ILSpy with `-r <BONELAB>/MelonLoader/Il2CppAssemblies` for a cleaner result.
+Copy `bin/Release/net6.0/Doppel.dll` into `BONELAB/Mods`.
 
-The starter recordings that ship in the package's `UserData/Bot Player` folder (about 27 MB of data
-files) are not included here.
+The project also references `Mods/Portals.dll`, a separate portal code mod that Doppel uses only if
+it is installed. `PortalWays.cs` catches the missing-assembly error at runtime. To build without it,
+remove the `Portals` reference along with `PortalWays.cs` and the one `Bot.cs` method that uses
+`Teleportable`.
+
+## How faithful is this
+
+- All types and members decompiled, with no decompiler warnings left once the game assemblies were
+  referenced.
+- One hand fix: in `Driving.cs` (the linear solver), ILSpy rendered two row swaps as `ref` locals that
+  don't compile. They were restored as tuple swaps.
+- Checked by building the project against the real BONELAB 0.7.3 interop assemblies (with a
+  compile-only stand-in for `Portals.dll`). The build gives 0 errors; the warnings are only unused
+  fields and nullable annotations. Decompiling the rebuilt DLL gives the same result as the
+  original for 31 of 45 files. The other 14 differ only in compiler output (local names, how
+  `switch` on strings is lowered, assignment chains), not in behaviour.
+
+The starter recordings in the package's `UserData/Bot Player` folder (about 27 MB of data files) are
+not included here.

@@ -36,8 +36,8 @@ public static class ShootSkill
 	{
 		if (shots >= 5 && !(seconds < 0.5f))
 		{
-			float num = (float)hits / (float)shots;
-			float score = (float)hits / seconds * Mathf.Sqrt(num);
+			float f = (float)hits / (float)shots;
+			float score = (float)hits / seconds * Mathf.Sqrt(f);
 			core.End(who, trying, score, hits + " of " + shots + " shots on it in " + seconds.ToString("0.0") + " s of shooting: " + score.ToString("0.00"));
 		}
 	}

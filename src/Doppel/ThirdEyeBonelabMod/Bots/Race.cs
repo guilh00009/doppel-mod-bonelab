@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using BoneLib;
-using Il2CppInterop.Runtime.InteropTypes;
 using Il2CppSLZ.Marrow;
 using Il2CppSLZ.Marrow.Pool;
-using Il2CppSLZ.Marrow.Warehouse;
 using UnityEngine;
 
 namespace ThirdEyeBonelabMod.Bots;
@@ -48,7 +46,7 @@ public static class Race
 	public static void Start()
 	{
 		Transform head = Player.Head;
-		if ((Object)(object)head == (Object)null)
+		if (head == null)
 		{
 			return;
 		}
@@ -61,30 +59,21 @@ public static class Race
 			Spawnables.Notify("No race: show a bot how to drive first (drive a kart while it learns)");
 			return;
 		}
-		Vector3 val = Flat(head.forward);
-		Vector3 val2 = ((Vector3)(ref val)).normalized;
-		if (((Vector3)(ref val2)).sqrMagnitude < 0.01f)
+		Vector3 vector = Flat(head.forward).normalized;
+		if (vector.sqrMagnitude < 0.01f)
 		{
-			val2 = Vector3.forward;
+			vector = Vector3.forward;
 		}
-		finish = head.position + val2 * Tuning.F("race.far", 80f);
-		RaycastHit val3 = default(RaycastHit);
-		if (Physics.Raycast(head.position, head.forward, ref val3, Tuning.F("race.most", 300f), -1, (QueryTriggerInteraction)1) && Vector3.Dot(((RaycastHit)(ref val3)).normal, Vector3.up) > 0.6f)
+		finish = head.position + vector * Tuning.F("race.far", 80f);
+		RaycastHit hitInfo2;
+		if (Physics.Raycast(head.position, head.forward, out var hitInfo, Tuning.F("race.most", 300f), -1, QueryTriggerInteraction.Ignore) && Vector3.Dot(hitInfo.normal, Vector3.up) > 0.6f && (hitInfo.point - head.position).magnitude > 15f)
 		{
-			val = ((RaycastHit)(ref val3)).point - head.position;
-			if (((Vector3)(ref val)).magnitude > 15f)
-			{
-				finish = ((RaycastHit)(ref val3)).point;
-				goto IL_0129;
-			}
+			finish = hitInfo.point;
 		}
-		RaycastHit val4 = default(RaycastHit);
-		if (Physics.Raycast(finish + Vector3.up * 20f, Vector3.down, ref val4, 60f, -1, (QueryTriggerInteraction)1))
+		else if (Physics.Raycast(finish + Vector3.up * 20f, Vector3.down, out hitInfo2, 60f, -1, QueryTriggerInteraction.Ignore))
 		{
-			finish = ((RaycastHit)(ref val4)).point;
+			finish = hitInfo2.point;
 		}
-		goto IL_0129;
-		IL_0129:
 		racers.Clear();
 		placed.Clear();
 		youIn = false;
@@ -100,37 +89,34 @@ public static class Race
 			Spawnables.Notify("No race: no bots of yours about");
 			return;
 		}
-		Vector3 val5 = head.position - Vector3.up * 1.5f;
-		RaycastHit val6 = default(RaycastHit);
-		if (Physics.Raycast(head.position, Vector3.down, ref val6, 3f, -1, (QueryTriggerInteraction)1))
+		Vector3 vector2 = head.position - Vector3.up * 1.5f;
+		if (Physics.Raycast(head.position, Vector3.down, out var hitInfo3, 3f, -1, QueryTriggerInteraction.Ignore))
 		{
-			val5 = ((RaycastHit)(ref val6)).point;
+			vector2 = hitInfo3.point;
 		}
-		Vector3 up = Vector3.up;
-		val = Flat(finish - val5);
-		Vector3 val7 = Vector3.Cross(up, ((Vector3)(ref val)).normalized);
+		Vector3 vector3 = Vector3.Cross(Vector3.up, Flat(finish - vector2).normalized);
 		float num = Tuning.F("race.apart", 3.5f);
 		float num2 = 2.5f + num * (float)(racers.Count + 1);
-		Vector3 val8 = val5 + Vector3.up * 0.6f;
-		RaycastHit val9 = default(RaycastHit);
-		float num3 = (Physics.SphereCast(val8, 0.5f, val7, ref val9, num2, -1, (QueryTriggerInteraction)1) ? ((RaycastHit)(ref val9)).distance : num2);
-		RaycastHit val10 = default(RaycastHit);
-		float num4 = (Physics.SphereCast(val8, 0.5f, -val7, ref val10, num2, -1, (QueryTriggerInteraction)1) ? ((RaycastHit)(ref val10)).distance : num2);
+		Vector3 origin = vector2 + Vector3.up * 0.6f;
+		RaycastHit hitInfo4;
+		float num3 = (Physics.SphereCast(origin, 0.5f, vector3, out hitInfo4, num2, -1, QueryTriggerInteraction.Ignore) ? hitInfo4.distance : num2);
+		RaycastHit hitInfo5;
+		float num4 = (Physics.SphereCast(origin, 0.5f, -vector3, out hitInfo5, num2, -1, QueryTriggerInteraction.Ignore) ? hitInfo5.distance : num2);
 		if (num4 > num3)
 		{
-			val7 = -val7;
+			vector3 = -vector3;
 		}
 		Lab.Event("race: grid to the " + ((num4 > num3) ? "left" : "right") + " (room " + Mathf.Max(num4, num3).ToString("0.0") + " of " + num2.ToString("0.0") + " m)");
-		ClearGrid(val5, 2.5f + num * (float)(racers.Count + 1) + 4f);
-		if ((Object)(object)Player.RigManager != (Object)null && (Object)(object)Player.RigManager.activeSeat == (Object)null)
+		ClearGrid(vector2, 2.5f + num * (float)(racers.Count + 1) + 4f);
+		if (Player.RigManager != null && Player.RigManager.activeSeat == null)
 		{
-			SpawnKart(val5 + val7 * 2.5f);
+			SpawnKart(vector2 + vector3 * 2.5f);
 		}
 		for (int i = 0; i < racers.Count; i++)
 		{
-			Vector3 val11 = val5 + val7 * (2.5f + num * (float)(i + 1));
-			SpawnKart(val11);
-			racers[i].RaceLineUp(val11 - val7 * 1.3f);
+			Vector3 vector4 = vector2 + vector3 * (2.5f + num * (float)(i + 1));
+			SpawnKart(vector4);
+			racers[i].RaceLineUp(vector4 - vector3 * 1.3f);
 		}
 		stage = Stage.LineUp;
 		stageAt = Time.time;
@@ -138,22 +124,7 @@ public static class Race
 		countSaid = -1;
 		MakePost();
 		Spawnables.Notify("Race! Get in your kart; the bots are going to theirs");
-		string[] obj = new string[7]
-		{
-			"race: to ",
-			((Vector3)(ref finish)).ToString("0"),
-			", ",
-			null,
-			null,
-			null,
-			null
-		};
-		val = Flat(finish - val5);
-		obj[3] = ((Vector3)(ref val)).magnitude.ToString("0");
-		obj[4] = " m off, ";
-		obj[5] = racers.Count.ToString();
-		obj[6] = " bots";
-		Lab.Event(string.Concat(obj));
+		Lab.Event("race: to " + finish.ToString("0") + ", " + Flat(finish - vector2).magnitude.ToString("0") + " m off, " + racers.Count + " bots");
 	}
 
 	public static void Stop(string why)
@@ -167,9 +138,9 @@ public static class Race
 		{
 			racer.RaceLineUpOff();
 		}
-		if ((Object)(object)post != (Object)null)
+		if (post != null)
 		{
-			Object.Destroy((Object)(object)post);
+			UnityEngine.Object.Destroy(post);
 		}
 		post = null;
 		Lab.Event("race over (" + why + "): " + ((placed.Count > 0) ? string.Join(", ", placed) : "nobody finished"));
@@ -225,33 +196,23 @@ public static class Race
 			}
 		}
 		float num2 = Tuning.F("race.finish", 8f);
-		Vector3 val;
 		foreach (Bot racer in racers)
 		{
 			string name = racer.Name;
-			if (placed.Exists((string p) => p.StartsWith(name + " ")))
+			if (!placed.Exists((string p) => p.StartsWith(name + " ")))
 			{
-				continue;
-			}
-			Vector3? bodyAt = racer.BodyAt;
-			if (bodyAt.HasValue)
-			{
-				val = Flat(bodyAt.Value - finish);
-				if (((Vector3)(ref val)).magnitude < num2)
+				Vector3? bodyAt = racer.BodyAt;
+				if (bodyAt.HasValue && Flat(bodyAt.Value - finish).magnitude < num2)
 				{
 					Place(name);
 				}
 			}
 		}
 		Transform head = Player.Head;
-		if (!youIn && (Object)(object)head != (Object)null)
+		if (!youIn && head != null && Flat(head.position - finish).magnitude < num2)
 		{
-			val = Flat(head.position - finish);
-			if (((Vector3)(ref val)).magnitude < num2)
-			{
-				youIn = true;
-				Place("you");
-			}
+			youIn = true;
+			Place("you");
 		}
 		if (placed.Count >= racers.Count + 1 || time > endAt)
 		{
@@ -288,16 +249,16 @@ public static class Race
 	{
 		try
 		{
-			post = GameObject.CreatePrimitive((PrimitiveType)2);
-			Object.Destroy((Object)(object)post.GetComponent<Collider>());
-			((Object)post).name = "Race finish";
+			post = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+			UnityEngine.Object.Destroy(post.GetComponent<Collider>());
+			post.name = "Race finish";
 			post.transform.position = finish + Vector3.up * 6f;
 			post.transform.localScale = new Vector3(1.5f, 6f, 1.5f);
 			Renderer component = post.GetComponent<Renderer>();
-			Shader val = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color");
-			if ((Object)(object)component != (Object)null && (Object)(object)val != (Object)null)
+			Shader shader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color");
+			if (component != null && shader != null)
 			{
-				component.material = new Material(val);
+				component.material = new Material(shader);
 				component.material.color = new Color(1f, 0.85f, 0.1f);
 			}
 		}
@@ -311,7 +272,7 @@ public static class Race
 	{
 		for (int num = toTurn.Count - 1; num >= 0; num--)
 		{
-			var (val, num2) = toTurn[num];
+			var (position, num2) = toTurn[num];
 			if (Time.time - num2 < 0.6f)
 			{
 				continue;
@@ -319,22 +280,22 @@ public static class Race
 			try
 			{
 				Driving.Model model = Driving.Of(Lessons.Drive());
-				Seat val2 = null;
-				Transform val3 = null;
-				foreach (Collider item in Physics.OverlapSphere(val, 2f, -1, (QueryTriggerInteraction)1))
+				Seat seat = null;
+				Transform transform = null;
+				foreach (Collider item in Physics.OverlapSphere(position, 2f, -1, QueryTriggerInteraction.Ignore))
 				{
-					Poolee val4 = (((Object)(object)item != (Object)null) ? ((Component)item).GetComponentInParent<Poolee>() : null);
-					if (!((Object)(object)val4 == (Object)null) && !((Object)(object)val4.SpawnableCrate == (Object)null) && model != null && !(((Scannable)val4.SpawnableCrate).Barcode.ID != model.barcode))
+					Poolee poolee = ((item != null) ? item.GetComponentInParent<Poolee>() : null);
+					if (!(poolee == null) && !(poolee.SpawnableCrate == null) && model != null && !(poolee.SpawnableCrate.Barcode.ID != model.barcode))
 					{
-						val2 = ((Component)val4).GetComponentInChildren<Seat>(true);
-						val3 = ((Component)val4).transform;
-						if ((Object)(object)val2 != (Object)null)
+						seat = poolee.GetComponentInChildren<Seat>(includeInactive: true);
+						transform = poolee.transform;
+						if (seat != null)
 						{
 							break;
 						}
 					}
 				}
-				if ((Object)(object)val2 == (Object)null || (Object)(object)val3 == (Object)null)
+				if (seat == null || transform == null)
 				{
 					if (Time.time - num2 > 3f)
 					{
@@ -343,13 +304,11 @@ public static class Race
 					}
 					continue;
 				}
-				Vector3 val5 = Flat(((Component)val2).transform.forward);
-				Vector3 val6 = ((Vector3)(ref val5)).normalized * (model?.forward ?? 1f);
-				val5 = Flat(finish - ((Component)val3).transform.position);
-				Vector3 normalized = ((Vector3)(ref val5)).normalized;
-				float num3 = Vector3.SignedAngle(val6, normalized, Vector3.up);
-				((Component)val3).transform.RotateAround(((Component)val2).transform.position, Vector3.up, num3);
-				Lab.Event("race: kart turned " + num3.ToString("0") + " deg to face the finish");
+				Vector3 from = Flat(seat.transform.forward).normalized * (model?.forward ?? 1f);
+				Vector3 normalized = Flat(finish - transform.transform.position).normalized;
+				float angle = Vector3.SignedAngle(from, normalized, Vector3.up);
+				transform.transform.RotateAround(seat.transform.position, Vector3.up, angle);
+				Lab.Event("race: kart turned " + angle.ToString("0") + " deg to face the finish");
 			}
 			catch (Exception ex)
 			{
@@ -370,26 +329,22 @@ public static class Race
 			}
 			int num = 0;
 			HashSet<IntPtr> hashSet = new HashSet<IntPtr>();
-			foreach (Seat item in Object.FindObjectsOfType<Seat>())
+			foreach (Seat item in UnityEngine.Object.FindObjectsOfType<Seat>())
 			{
-				Poolee val = (((Object)(object)item != (Object)null) ? ((Component)item).GetComponentInParent<Poolee>() : null);
-				if ((Object)(object)val == (Object)null || !hashSet.Add(((Il2CppObjectBase)(object)val).Pointer) || !((Component)val).gameObject.activeInHierarchy || (Object)(object)val.SpawnableCrate == (Object)null || ((Scannable)val.SpawnableCrate).Barcode.ID != model.barcode)
+				Poolee poolee = ((item != null) ? item.GetComponentInParent<Poolee>() : null);
+				if (poolee == null || !hashSet.Add(poolee.Pointer) || !poolee.gameObject.activeInHierarchy || poolee.SpawnableCrate == null || poolee.SpawnableCrate.Barcode.ID != model.barcode)
 				{
 					continue;
 				}
 				bool flag = false;
-				foreach (Seat componentsInChild in ((Component)val).GetComponentsInChildren<Seat>(true))
+				foreach (Seat componentsInChild in poolee.GetComponentsInChildren<Seat>(includeInactive: true))
 				{
-					flag |= (Object)(object)componentsInChild != (Object)null && (Object)(object)componentsInChild.rigManager != (Object)null;
+					flag |= componentsInChild != null && componentsInChild.rigManager != null;
 				}
-				if (!flag)
+				if (!flag && !(Flat(poolee.transform.position - around).magnitude > within))
 				{
-					Vector3 val2 = Flat(((Component)val).transform.position - around);
-					if (!(((Vector3)(ref val2)).magnitude > within))
-					{
-						val.Despawn();
-						num++;
-					}
+					poolee.Despawn();
+					num++;
 				}
 			}
 			if (num > 0)
@@ -410,19 +365,17 @@ public static class Race
 			Driving.Model model = Driving.Of(Lessons.Drive());
 			if (model != null && !string.IsNullOrEmpty(model.barcode))
 			{
-				Vector3 val = Flat(finish - at);
-				Vector3 val2 = ((Vector3)(ref val)).normalized;
-				if (((Vector3)(ref val2)).sqrMagnitude < 0.01f)
+				Vector3 forward = Flat(finish - at).normalized;
+				if (forward.sqrMagnitude < 0.01f)
 				{
-					val2 = Vector3.forward;
+					forward = Vector3.forward;
 				}
-				RaycastHit val3 = default(RaycastHit);
-				if (Physics.Raycast(at + Vector3.up * 3f, Vector3.down, ref val3, 8f, -1, (QueryTriggerInteraction)1))
+				if (Physics.Raycast(at + Vector3.up * 3f, Vector3.down, out var hitInfo, 8f, -1, QueryTriggerInteraction.Ignore))
 				{
-					at = ((RaycastHit)(ref val3)).point;
+					at = hitInfo.point;
 				}
 				toTurn.Add((at, Time.time));
-				HelperMethods.SpawnCrate(model.barcode, at + Vector3.up * 0.3f, Quaternion.LookRotation(val2), Vector3.one, false, (Action<GameObject>)null, (Action<GameObject>)null);
+				HelperMethods.SpawnCrate(model.barcode, at + Vector3.up * 0.3f, Quaternion.LookRotation(forward), Vector3.one);
 			}
 		}
 		catch (Exception ex)

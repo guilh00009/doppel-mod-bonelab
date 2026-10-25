@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using BoneLib;
-using Il2CppInterop.Runtime.InteropTypes;
 using Il2CppSLZ.Marrow;
 using Il2CppSLZ.Marrow.Pool;
-using Il2CppSLZ.Marrow.Warehouse;
 using MelonLoader;
 using UnityEngine;
 
@@ -189,7 +187,7 @@ public static class ExactClone
 	private static float[] Read(BaseController c)
 	{
 		float[] array = new float[width];
-		if ((Object)(object)c == (Object)null)
+		if (c == null)
 		{
 			return array;
 		}
@@ -212,9 +210,9 @@ public static class ExactClone
 					break;
 				case Sort.Vector2:
 				{
-					Vector2 val = (Vector2)value;
-					array[num] = val.x;
-					array[num + 1] = val.y;
+					Vector2 vector = (Vector2)value;
+					array[num] = vector.x;
+					array[num + 1] = vector.y;
 					break;
 				}
 				}
@@ -229,7 +227,7 @@ public static class ExactClone
 
 	public static void Put(BaseController c, Take take, int from, int a, int b, float k, bool left)
 	{
-		if ((Object)(object)c == (Object)null || props == null || take.fields == null)
+		if (c == null || props == null || take.fields == null)
 		{
 			return;
 		}
@@ -298,7 +296,7 @@ public static class ExactClone
 	public static void Start()
 	{
 		RigManager rigManager = Player.RigManager;
-		if ((Object)(object)rigManager == (Object)null || taking != null)
+		if (rigManager == null || taking != null)
 		{
 			return;
 		}
@@ -310,38 +308,38 @@ public static class ExactClone
 		startedAt = Time.time;
 		nextId = 0;
 		live.Clear();
-		Rig physicsRig = (Rig)(object)Player.PhysicsRig;
-		taking.startFeet = (((Object)(object)physicsRig != (Object)null && (Object)(object)physicsRig.centerOfPressure != (Object)null) ? physicsRig.centerOfPressure.position : (Player.Head.position - Vector3.up * 1.6f));
+		Rig physicsRig = Player.PhysicsRig;
+		taking.startFeet = ((physicsRig != null && physicsRig.centerOfPressure != null) ? physicsRig.centerOfPressure.position : (Player.Head.position - Vector3.up * 1.6f));
 		taking.avatar = BotRig.AvatarOf(rigManager);
-		if ((Object)(object)rigManager.avatar != (Object)null)
+		if (rigManager.avatar != null)
 		{
-			taking.avatarScale = ((Component)rigManager.avatar).transform.localScale;
+			taking.avatarScale = rigManager.avatar.transform.localScale;
 		}
-		foreach (Poolee item in Object.FindObjectsOfType<Poolee>())
+		foreach (Poolee item in UnityEngine.Object.FindObjectsOfType<Poolee>())
 		{
-			if (!((Object)(object)item == (Object)null) && !((Object)(object)item.SpawnableCrate == (Object)null) && ((Component)item).gameObject.activeInHierarchy && !((Object)(object)((Component)item).GetComponentInParent<RigManager>() != (Object)null))
+			if (!(item == null) && !(item.SpawnableCrate == null) && item.gameObject.activeInHierarchy && !(item.GetComponentInParent<RigManager>() != null))
 			{
-				live[((Il2CppObjectBase)(object)item).Pointer] = new Item
+				live[item.Pointer] = new Item
 				{
 					id = nextId++,
-					barcode = ((Scannable)item.SpawnableCrate).Barcode.ID,
-					at = Bot.Pose.Of(((Component)item).transform)
+					barcode = item.SpawnableCrate.Barcode.ID,
+					at = Bot.Pose.Of(item.transform)
 				};
 			}
 		}
 		for (int i = 0; i < 2; i++)
 		{
-			Hand val = ((i == 0) ? Player.LeftHand : Player.RightHand);
-			GameObject val2 = (((Object)(object)val != (Object)null) ? val.m_CurrentAttachedGO : null);
-			Poolee val3 = (((Object)(object)val2 != (Object)null) ? val2.GetComponentInParent<Poolee>() : null);
-			Grip val4 = (((Object)(object)val2 != (Object)null) ? (val2.GetComponent<Grip>() ?? val2.GetComponentInParent<Grip>()) : null);
-			if (!((Object)(object)val3 == (Object)null) && !((Object)(object)val4 == (Object)null) && live.TryGetValue(((Il2CppObjectBase)(object)val3).Pointer, out var value))
+			Hand hand = ((i == 0) ? Player.LeftHand : Player.RightHand);
+			GameObject gameObject = ((hand != null) ? hand.m_CurrentAttachedGO : null);
+			Poolee poolee = ((gameObject != null) ? gameObject.GetComponentInParent<Poolee>() : null);
+			Grip grip = ((gameObject != null) ? (gameObject.GetComponent<Grip>() ?? gameObject.GetComponentInParent<Grip>()) : null);
+			if (!(poolee == null) && !(grip == null) && live.TryGetValue(poolee.Pointer, out var value))
 			{
 				value.touched = (value.pouch = true);
 				value.pouchHand = i;
-				value.pouchGrip = ((Object)val4).name;
+				value.pouchGrip = grip.name;
 				value.pouchT = 0f;
-				value.handAt = Bot.Pose.Of(((Component)val).transform);
+				value.handAt = Bot.Pose.Of(hand.transform);
 			}
 		}
 		Spawnables.Notify("Recording an exact clone of you");
@@ -410,7 +408,7 @@ public static class ExactClone
 	public static void NoteFrame(OpenControllerRig controls)
 	{
 		Take take = taking;
-		if (take == null || (Object)(object)controls == (Object)null || (Object)(object)controls.vrRoot == (Object)null || (Object)(object)controls.headset == (Object)null)
+		if (take == null || controls == null || controls.vrRoot == null || controls.headset == null)
 		{
 			return;
 		}
@@ -431,28 +429,28 @@ public static class ExactClone
 			t = num,
 			root = root,
 			head = pose * Bot.Pose.Of(controls.headset),
-			left = pose * Bot.Pose.Of(((Component)((ControllerRig)controls).leftController).transform),
-			right = pose * Bot.Pose.Of(((Component)((ControllerRig)controls).rightController).transform),
+			left = pose * Bot.Pose.Of(controls.leftController.transform),
+			right = pose * Bot.Pose.Of(controls.rightController.transform),
 			move = move,
 			moving = moving,
-			leftIn = Read(((ControllerRig)controls).leftController),
-			rightIn = Read(((ControllerRig)controls).rightController)
+			leftIn = Read(controls.leftController),
+			rightIn = Read(controls.rightController)
 		};
-		Rig physicsRig = (Rig)(object)Player.PhysicsRig;
-		if ((Object)(object)physicsRig != (Object)null && (Object)(object)physicsRig.m_pelvis != (Object)null)
+		Rig physicsRig = Player.PhysicsRig;
+		if (physicsRig != null && physicsRig.m_pelvis != null)
 		{
 			frame.pelvis = physicsRig.m_pelvis.position;
 		}
 		Hand leftHand = Player.LeftHand;
 		Hand rightHand = Player.RightHand;
-		if ((Object)(object)leftHand != (Object)null)
+		if (leftHand != null)
 		{
-			frame.leftHand = Bot.Pose.Of(((Component)leftHand).transform);
+			frame.leftHand = Bot.Pose.Of(leftHand.transform);
 			frame.leftHeld = HeldId(leftHand);
 		}
-		if ((Object)(object)rightHand != (Object)null)
+		if (rightHand != null)
 		{
-			frame.rightHand = Bot.Pose.Of(((Component)rightHand).transform);
+			frame.rightHand = Bot.Pose.Of(rightHand.transform);
 			frame.rightHeld = HeldId(rightHand);
 		}
 		take.frames.Add(frame);
@@ -461,8 +459,8 @@ public static class ExactClone
 	private static int HeldId(Hand hand)
 	{
 		GameObject currentAttachedGO = hand.m_CurrentAttachedGO;
-		Poolee val = (((Object)(object)currentAttachedGO != (Object)null) ? currentAttachedGO.GetComponentInParent<Poolee>() : null);
-		if (!((Object)(object)val != (Object)null) || !live.TryGetValue(((Il2CppObjectBase)(object)val).Pointer, out var value))
+		Poolee poolee = ((currentAttachedGO != null) ? currentAttachedGO.GetComponentInParent<Poolee>() : null);
+		if (!(poolee != null) || !live.TryGetValue(poolee.Pointer, out var value))
 		{
 			return -1;
 		}
@@ -472,25 +470,25 @@ public static class ExactClone
 	public static void OnSpawn(Poolee p)
 	{
 		Take take = taking;
-		if (take == null || (Object)(object)p == (Object)null || (Object)(object)p.SpawnableCrate == (Object)null || Time.time < suppressUntil)
+		if (take == null || p == null || p.SpawnableCrate == null || Time.time < suppressUntil)
 		{
 			return;
 		}
-		string iD = ((Scannable)p.SpawnableCrate).Barcode.ID;
-		if (!Clone.IsBody(iD, ((Object)((Component)p).gameObject).name))
+		string iD = p.SpawnableCrate.Barcode.ID;
+		if (!Clone.IsBody(iD, p.gameObject.name))
 		{
 			Item item = new Item
 			{
 				id = nextId++,
 				barcode = iD,
-				at = Bot.Pose.Of(((Component)p).transform),
+				at = Bot.Pose.Of(p.transform),
 				spawnT = Time.time - startedAt
 			};
-			if (live.TryGetValue(((Il2CppObjectBase)(object)p).Pointer, out var value) && value.touched && !take.items.Contains(value))
+			if (live.TryGetValue(p.Pointer, out var value) && value.touched && !take.items.Contains(value))
 			{
 				take.items.Add(value);
 			}
-			live[((Il2CppObjectBase)(object)p).Pointer] = item;
+			live[p.Pointer] = item;
 			take.items.Add(item);
 		}
 	}
@@ -498,33 +496,29 @@ public static class ExactClone
 	public static void OnGrip(Grip grip, Hand hand, bool on)
 	{
 		Take take = taking;
-		if (take == null || (Object)(object)grip == (Object)null || (Object)(object)hand == (Object)null)
+		if (take == null || grip == null || hand == null)
 		{
 			return;
 		}
-		int num = ((!((Object)(object)hand == (Object)(object)Player.LeftHand)) ? (((Object)(object)hand == (Object)(object)Player.RightHand) ? 1 : (-1)) : 0);
-		if (num < 0 || (Object)(object)((Component)grip).GetComponentInParent<RigManager>() != (Object)null)
+		int num = ((!(hand == Player.LeftHand)) ? ((hand == Player.RightHand) ? 1 : (-1)) : 0);
+		if (num < 0 || grip.GetComponentInParent<RigManager>() != null)
 		{
 			return;
 		}
-		Poolee componentInParent = ((Component)grip).GetComponentInParent<Poolee>();
-		if ((Object)(object)componentInParent == (Object)null || !live.TryGetValue(((Il2CppObjectBase)(object)componentInParent).Pointer, out var value))
+		Poolee componentInParent = grip.GetComponentInParent<Poolee>();
+		if (componentInParent == null || !live.TryGetValue(componentInParent.Pointer, out var value))
 		{
 			return;
 		}
 		float num2 = Time.time - startedAt;
 		if (on)
 		{
-			if (!value.touched && value.spawnT >= 0f && num2 - value.spawnT < 0.25f)
+			if (!value.touched && value.spawnT >= 0f && num2 - value.spawnT < 0.25f && (value.at.position - hand.transform.position).magnitude < 0.3f)
 			{
-				Vector3 val = value.at.position - ((Component)hand).transform.position;
-				if (((Vector3)(ref val)).magnitude < 0.3f)
-				{
-					value.pouch = true;
-					value.pouchHand = num;
-					value.pouchGrip = ((Object)grip).name;
-					value.pouchT = num2;
-				}
+				value.pouch = true;
+				value.pouchHand = num;
+				value.pouchGrip = grip.name;
+				value.pouchT = num2;
 			}
 			value.touched = true;
 		}
@@ -533,7 +527,7 @@ public static class ExactClone
 			t = num2,
 			hand = num,
 			item = value.id,
-			grip = ((Object)grip).name,
+			grip = grip.name,
 			on = on
 		});
 	}

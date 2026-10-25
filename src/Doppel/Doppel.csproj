@@ -30,7 +30,8 @@
     <Reference Include="Il2CppSLZ.Marrow"><HintPath>$(Il2CppAsm)\Il2CppSLZ.Marrow.dll</HintPath></Reference>
     <Reference Include="Il2Cppmscorlib"><HintPath>$(Il2CppAsm)\Il2Cppmscorlib.dll</HintPath></Reference>
     <Reference Include="Il2CppUniTask"><HintPath>$(Il2CppAsm)\Il2CppUniTask.dll</HintPath></Reference>
-    <Reference Include="Portals"><HintPath>$(Il2CppAsm)\Portals.dll</HintPath></Reference>
+    <!-- Optional at runtime: the separate "Portals" code mod. Only PortalWays.cs and one Bot.cs method use it. -->
+    <Reference Include="Portals"><HintPath>$(ModsDir)\Portals.dll</HintPath></Reference>
     <Reference Include="Unity.TextMeshPro"><HintPath>$(Il2CppAsm)\Unity.TextMeshPro.dll</HintPath></Reference>
     <Reference Include="UnityEngine.CoreModule"><HintPath>$(Il2CppAsm)\UnityEngine.CoreModule.dll</HintPath></Reference>
     <Reference Include="UnityEngine.PhysicsModule"><HintPath>$(Il2CppAsm)\UnityEngine.PhysicsModule.dll</HintPath></Reference>

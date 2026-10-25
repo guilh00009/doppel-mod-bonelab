@@ -4,7 +4,6 @@ using System.IO;
 using BoneLib;
 using BoneLib.BoneMenu;
 using HarmonyLib;
-using Il2CppInterop.Runtime.InteropTypes;
 using Il2CppSLZ.Marrow;
 using Il2CppSLZ.Marrow.Combat;
 using Il2CppSLZ.Marrow.Data;
@@ -25,9 +24,9 @@ public static class BotManager
 
 	public static bool StayNear;
 
-	private static Action<Grip, Hand> onGripOn;
+	private static System.Action<Grip, Hand> onGripOn;
 
-	private static Action<Grip, Hand> onGripOff;
+	private static System.Action<Grip, Hand> onGripOff;
 
 	private static bool loopClone;
 
@@ -35,7 +34,7 @@ public static class BotManager
 
 	public static bool ShowThoughts;
 
-	private static readonly Dictionary<IntPtr, Bot> bots = new Dictionary<IntPtr, Bot>();
+	private static readonly Dictionary<System.IntPtr, Bot> bots = new Dictionary<System.IntPtr, Bot>();
 
 	private static bool spawning;
 
@@ -49,9 +48,9 @@ public static class BotManager
 
 	private static bool shutDown;
 
-	private static Action<Gun> onGunFired;
+	private static System.Action<Gun> onGunFired;
 
-	private static Action onLevelUnloaded;
+	private static System.Action onLevelUnloaded;
 
 	private const string Keep = "ThirdEyeBotPlayer.";
 
@@ -86,21 +85,21 @@ public static class BotManager
 		Patch(harmony, typeof(Player_Health), "TAKEDAMAGE", "BotDamagePrefix", null);
 		Patch(harmony, typeof(PlayerDamageReceiver), "OnCollisionEnter", "BotBumpPrefix", null);
 		Patch(harmony, typeof(Magazine), "OnGrab", "BotMagazinePrefix", null);
-		PatchExact(harmony, typeof(AmmoInventory), "AddCartridge", new Type[2]
+		PatchExact(harmony, typeof(AmmoInventory), "AddCartridge", new System.Type[2]
 		{
 			typeof(CartridgeData),
 			typeof(int)
 		}, "BotAmmoAddPrefix");
-		PatchExact(harmony, typeof(AmmoInventory), "GetCartridgeCount", new Type[1] { typeof(CartridgeData) }, "BotAmmoCountPrefix");
+		PatchExact(harmony, typeof(AmmoInventory), "GetCartridgeCount", new System.Type[1] { typeof(CartridgeData) }, "BotAmmoCountPrefix");
 		try
 		{
-			harmony.Patch(AccessTools.Method(typeof(AmmoInventory), "RemoveCartridge", new Type[2]
+			harmony.Patch(AccessTools.Method(typeof(AmmoInventory), "RemoveCartridge", new System.Type[2]
 			{
 				typeof(CartridgeData),
 				typeof(int)
 			}), new HarmonyMethod(typeof(BotManager), "BotAmmoAddPrefix"), null, null, new HarmonyMethod(typeof(BotManager), "AmmoFinalizer"), null);
 		}
-		catch (Exception ex)
+		catch (System.Exception ex)
 		{
 			MelonLogger.Warning("Bot Player: could not hook AmmoInventory.RemoveCartridge: " + ex.Message);
 		}
@@ -120,7 +119,7 @@ public static class BotManager
 					{
 						NetBots.GunShot(gun);
 					}
-					catch (Exception)
+					catch (System.Exception)
 					{
 					}
 					break;
@@ -131,7 +130,7 @@ public static class BotManager
 			{
 				value3.OnAnyGunFired(gun);
 			}
-			if ((Object)(object)gun != (Object)null && (Object)(object)gun.firePointTransform != (Object)null)
+			if (gun != null && gun.firePointTransform != null)
 			{
 				foreach (Bot value4 in bots.Values)
 				{
@@ -178,59 +177,59 @@ public static class BotManager
 		};
 		Hooking.OnLevelUnloaded += onLevelUnloaded;
 		Carried();
-		page.CreateFunction("Spawn bot", Color.green, (Action)delegate
+		page.CreateFunction("Spawn bot", Color.green, delegate
 		{
 			Spawn(enemy: false);
 		});
-		page.CreateFunction("Spawn enemy bot (fights you)", Color.red, (Action)delegate
+		page.CreateFunction("Spawn enemy bot (fights you)", Color.red, delegate
 		{
 			Spawn(enemy: true);
 		});
-		page.CreateFunction("Battle: 5 friends vs 5 enemies (random guns)", Color.yellow, (Action)Battle);
-		page.CreateFunction("Remove bots", Color.red, (Action)RemoveAll);
-		page.CreateFunction("Bring bots to me", Color.white, (Action)BringAll);
-		page.CreateFunction("Play on its own (brain)", Color.magenta, (Action)delegate
+		page.CreateFunction("Battle: 5 friends vs 5 enemies (random guns)", Color.yellow, Battle);
+		page.CreateFunction("Remove bots", Color.red, RemoveAll);
+		page.CreateFunction("Bring bots to me", Color.white, BringAll);
+		page.CreateFunction("Play on its own (brain)", Color.magenta, delegate
 		{
 			SetMode(Bot.Mode.Brain);
 		});
-		page.CreateBool("Practise driving (learns by itself)", Color.magenta, DriveSkill.Practice, (Action<bool>)delegate(bool v)
+		page.CreateBool("Practise driving (learns by itself)", Color.magenta, DriveSkill.Practice, delegate(bool v)
 		{
 			DriveSkill.Practice = v;
 		});
-		page.CreateBool("Show what it is thinking", Color.magenta, ShowThoughts, (Action<bool>)delegate(bool v)
+		page.CreateBool("Show what it is thinking", Color.magenta, ShowThoughts, delegate(bool v)
 		{
 			ShowThoughts = v;
 		});
-		page.CreateBool("Pop-up messages", Color.white, Spawnables.Popups, (Action<bool>)delegate(bool v)
+		page.CreateBool("Pop-up messages", Color.white, Spawnables.Popups, delegate(bool v)
 		{
 			Spawnables.Popups = v;
 		});
-		recordToggle = page.CreateBool("Learn from me (watches everything you do)", Color.green, Recorder.Recording, (Action<bool>)SetLearning);
-		page.CreateFunction("Forget the last 30 seconds", Color.yellow, (Action)ForgetLast);
-		page.CreateFunction("Forget what it learned", Color.red, (Action)delegate
+		recordToggle = page.CreateBool("Learn from me (watches everything you do)", Color.green, Recorder.Recording, SetLearning);
+		page.CreateFunction("Forget the last 30 seconds", Color.yellow, ForgetLast);
+		page.CreateFunction("Forget what it learned", Color.red, delegate
 		{
 			Knowledge.Forget();
 			SelfTaught.Forget();
 			Spawnables.Notify("It has forgotten everything it learned");
 		});
 		MoveSlots.BuildMenu(page);
-		page.CreateFunction("Stand still", Color.white, (Action)delegate
+		page.CreateFunction("Stand still", Color.white, delegate
 		{
 			SetMode(Bot.Mode.Stand);
 		});
-		page.CreateFunction("Follow me", Color.white, (Action)delegate
+		page.CreateFunction("Follow me", Color.white, delegate
 		{
 			SetMode(Bot.Mode.Follow);
 		});
-		cloneToggle = page.CreateBool("Record clone (exact copy of me)", Color.red, Clone.Recording, (Action<bool>)Clone.Set);
-		page.CreateFunction("Play clone", Color.green, (Action)PlayClone);
-		exactToggle = page.CreateBool("Record EXACT clone (new)", Color.red, ExactClone.Recording, (Action<bool>)ExactClone.Set);
-		page.CreateFunction("Play EXACT clone (new)", Color.green, (Action)PlayExact);
-		page.CreateBool("Loop clone", Color.white, loopClone, (Action<bool>)delegate(bool v)
+		cloneToggle = page.CreateBool("Record clone (exact copy of me)", Color.red, Clone.Recording, Clone.Set);
+		page.CreateFunction("Play clone", Color.green, PlayClone);
+		exactToggle = page.CreateBool("Record EXACT clone (new)", Color.red, ExactClone.Recording, ExactClone.Set);
+		page.CreateFunction("Play EXACT clone (new)", Color.green, PlayExact);
+		page.CreateBool("Loop clone", Color.white, loopClone, delegate(bool v)
 		{
 			loopClone = v;
 		});
-		page.CreateFunction("Copy my avatar", Color.white, (Action)delegate
+		page.CreateFunction("Copy my avatar", Color.white, delegate
 		{
 			foreach (Bot value5 in bots.Values)
 			{
@@ -265,25 +264,25 @@ public static class BotManager
 	{
 		Entry.NetStop();
 		WallGrab.DropAll();
-		AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.lab", Lab.On);
-		AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.safe", Lab.Safe);
-		AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.thoughts", ShowThoughts);
-		AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.ownSpawns", OwnSpawns);
-		AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.stayNear", StayNear);
-		AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.drivePractice", DriveSkill.Practice);
-		AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.practice", Targets.Practice);
-		AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.follow", FollowDistance);
-		AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.teach", GunMoves.Teaching);
+		System.AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.lab", Lab.On);
+		System.AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.safe", Lab.Safe);
+		System.AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.thoughts", ShowThoughts);
+		System.AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.ownSpawns", OwnSpawns);
+		System.AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.stayNear", StayNear);
+		System.AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.drivePractice", DriveSkill.Practice);
+		System.AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.practice", Targets.Practice);
+		System.AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.follow", FollowDistance);
+		System.AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.teach", GunMoves.Teaching);
 		foreach (Bot value in bots.Values)
 		{
-			AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.mode", value.KeptMode.ToString());
-			AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.gun." + ((Il2CppObjectBase)(object)value.rig).Pointer, value.OwnGun);
-			AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.stow." + ((Il2CppObjectBase)(object)value.rig).Pointer, value.KeepStowed());
+			System.AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.mode", value.KeptMode.ToString());
+			System.AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.gun." + value.rig.Pointer, value.OwnGun);
+			System.AppDomain.CurrentDomain.SetData("ThirdEyeBotPlayer.stow." + value.rig.Pointer, value.KeepStowed());
 			try
 			{
 				value.Detach();
 			}
-			catch (Exception)
+			catch (System.Exception)
 			{
 			}
 		}
@@ -306,7 +305,7 @@ public static class BotManager
 
 	private static void Carried()
 	{
-		AppDomain currentDomain = AppDomain.CurrentDomain;
+		System.AppDomain currentDomain = System.AppDomain.CurrentDomain;
 		if (currentDomain.GetData("ThirdEyeBotPlayer.lab") is bool on)
 		{
 			Lab.On = on;
@@ -343,40 +342,40 @@ public static class BotManager
 		Bot.Mode result = Bot.Mode.Stand;
 		if (currentDomain.GetData("ThirdEyeBotPlayer.mode") is string value)
 		{
-			Enum.TryParse<Bot.Mode>(value, out result);
+			System.Enum.TryParse<Bot.Mode>(value, out result);
 		}
 		try
 		{
-			foreach (RigManager item in Object.FindObjectsOfType<RigManager>())
+			foreach (RigManager item in UnityEngine.Object.FindObjectsOfType<RigManager>())
 			{
-				if (!BotRig.IsBot(item) || bots.ContainsKey(((Il2CppObjectBase)(object)item).Pointer))
+				if (!BotRig.IsBot(item) || bots.ContainsKey(item.Pointer))
 				{
 					continue;
 				}
-				if ((Object)(object)((Component)item).transform.Find("ThirdEyeNetPuppet") != (Object)null)
+				if (item.transform.Find("ThirdEyeNetPuppet") != null)
 				{
-					Object.Destroy((Object)(object)((Component)item).gameObject);
+					UnityEngine.Object.Destroy(item.gameObject);
 					continue;
 				}
-				OpenControllerRig val = ((Il2CppObjectBase)(object)item.ControllerRig).TryCast<OpenControllerRig>();
-				float yaw = (((Object)(object)val != (Object)null && (Object)(object)val.vrRoot != (Object)null) ? val.vrRoot.eulerAngles.y : ((Component)item).transform.eulerAngles.y);
+				OpenControllerRig openControllerRig = item.ControllerRig.TryCast<OpenControllerRig>();
+				float yaw = ((openControllerRig != null && openControllerRig.vrRoot != null) ? openControllerRig.vrRoot.eulerAngles.y : item.transform.eulerAngles.y);
 				Bot bot = new Bot(item, yaw);
-				bots[((Il2CppObjectBase)(object)item).Pointer] = bot;
-				bot.TakeStowed(currentDomain.GetData("ThirdEyeBotPlayer.stow." + ((Il2CppObjectBase)(object)item).Pointer) as object[]);
-				currentDomain.SetData("ThirdEyeBotPlayer.stow." + ((Il2CppObjectBase)(object)item).Pointer, null);
+				bots[item.Pointer] = bot;
+				bot.TakeStowed(currentDomain.GetData("ThirdEyeBotPlayer.stow." + item.Pointer) as object[]);
+				currentDomain.SetData("ThirdEyeBotPlayer.stow." + item.Pointer, null);
 				if (result != 0)
 				{
 					bot.SetMode(result);
 				}
-				Gun val2 = (((Object)(object)item.physicsRig != (Object)null) ? Player.GetComponentInHand<Gun>(item.physicsRig.rightHand) : null);
-				Gun val3 = (Gun)(((object)val2) ?? ((object)/*isinst with value type is only supported in some contexts*/));
-				if ((Object)(object)val3 != (Object)null)
+				Gun gun = ((item.physicsRig != null) ? Player.GetComponentInHand<Gun>(item.physicsRig.rightHand) : null);
+				Gun gun2 = gun ?? (currentDomain.GetData("ThirdEyeBotPlayer.gun." + item.Pointer) as Gun);
+				if (gun2 != null)
 				{
-					bot.AdoptGun(val3, (Object)(object)val2 != (Object)null);
+					bot.AdoptGun(gun2, gun != null);
 				}
 			}
 		}
-		catch (Exception ex)
+		catch (System.Exception ex)
 		{
 			MelonLogger.Warning("Bot Player: the bots about could not be taken over: " + ex.Message);
 		}
@@ -386,25 +385,25 @@ public static class BotManager
 		}
 	}
 
-	private static void PatchExact(HarmonyLib.Harmony harmony, Type type, string method, Type[] takes, string prefix)
+	private static void PatchExact(HarmonyLib.Harmony harmony, System.Type type, string method, System.Type[] takes, string prefix)
 	{
 		try
 		{
 			harmony.Patch(AccessTools.Method(type, method, takes), new HarmonyMethod(typeof(BotManager), prefix));
 		}
-		catch (Exception ex)
+		catch (System.Exception ex)
 		{
 			MelonLogger.Warning("Bot Player: could not hook " + type.Name + "." + method + ": " + ex.Message);
 		}
 	}
 
-	private static void Patch(HarmonyLib.Harmony harmony, Type type, string method, string prefix, string postfix)
+	private static void Patch(HarmonyLib.Harmony harmony, System.Type type, string method, string prefix, string postfix)
 	{
 		try
 		{
 			harmony.Patch(AccessTools.Method(type, method), (prefix != null) ? new HarmonyMethod(typeof(BotManager), prefix) : null, (postfix != null) ? new HarmonyMethod(typeof(BotManager), postfix) : null);
 		}
-		catch (Exception ex)
+		catch (System.Exception ex)
 		{
 			MelonLogger.Warning("Bot Player: could not hook " + type.Name + "." + method + ": " + ex.Message);
 		}
@@ -423,7 +422,7 @@ public static class BotManager
 			CarDoors.Sweep();
 			Orders.Step();
 		}
-		catch (Exception ex)
+		catch (System.Exception ex)
 		{
 			MelonLogger.Warning("Bot Player: gun weight: " + ex.Message);
 		}
@@ -431,7 +430,7 @@ public static class BotManager
 		{
 			MakeBattle();
 		}
-		catch (Exception ex2)
+		catch (System.Exception ex2)
 		{
 			MelonLogger.Warning("Bot Player: battle: " + ex2.Message);
 			toMake.Clear();
@@ -467,7 +466,7 @@ public static class BotManager
 		{
 			NetBots.Update(bots.Values);
 		}
-		catch (Exception ex3)
+		catch (System.Exception ex3)
 		{
 			if (Time.time - netSaidAt > 10f)
 			{
@@ -480,12 +479,12 @@ public static class BotManager
 			return;
 		}
 		float deltaTime = Time.deltaTime;
-		List<IntPtr> list = null;
-		foreach (KeyValuePair<IntPtr, Bot> bot in bots)
+		List<System.IntPtr> list = null;
+		foreach (KeyValuePair<System.IntPtr, Bot> bot in bots)
 		{
 			if (!bot.Value.Alive)
 			{
-				(list ?? (list = new List<IntPtr>())).Add(bot.Key);
+				(list ?? (list = new List<System.IntPtr>())).Add(bot.Key);
 				continue;
 			}
 			try
@@ -507,7 +506,7 @@ public static class BotManager
 		{
 			return;
 		}
-		foreach (IntPtr item in list)
+		foreach (System.IntPtr item in list)
 		{
 			if (bots.ContainsKey(item))
 			{
@@ -515,7 +514,7 @@ public static class BotManager
 				{
 					bots[item].Remove();
 				}
-				catch (Exception)
+				catch (System.Exception)
 				{
 				}
 				bots.Remove(item);
@@ -525,7 +524,7 @@ public static class BotManager
 
 	private static Bot Find(RigManager rig)
 	{
-		if (!((Object)(object)rig != (Object)null) || !bots.TryGetValue(((Il2CppObjectBase)(object)rig).Pointer, out var value))
+		if (!(rig != null) || !bots.TryGetValue(rig.Pointer, out var value))
 		{
 			return null;
 		}
@@ -557,7 +556,7 @@ public static class BotManager
 					value.GunFixed(Time.fixedDeltaTime);
 				}
 			}
-			catch (Exception ex)
+			catch (System.Exception ex)
 			{
 				MelonLogger.Error("Bot Player clone: " + ex.Message);
 			}
@@ -566,7 +565,7 @@ public static class BotManager
 
 	private static void RecordPostfix(OpenControllerRig __instance)
 	{
-		if (!shutDown && ExactClone.Recording && (Object)(object)__instance != (Object)null && (Object)(object)((Rig)__instance).manager == (Object)(object)Player.RigManager)
+		if (!shutDown && ExactClone.Recording && __instance != null && __instance.manager == Player.RigManager)
 		{
 			ExactClone.NoteFrame(__instance);
 		}
@@ -575,7 +574,7 @@ public static class BotManager
 	private static void ExactGrip(Grip grip, Hand hand, bool on)
 	{
 		ExactClone.OnGrip(grip, hand, on);
-		(((Object)(object)hand != (Object)null) ? Find(hand.manager) : null)?.ExactGrip(grip, hand, on);
+		((hand != null) ? Find(hand.manager) : null)?.ExactGrip(grip, hand, on);
 	}
 
 	public static void PlayExact()
@@ -593,7 +592,7 @@ public static class BotManager
 			Spawnables.Notify("Spawn a bot first");
 			return;
 		}
-		using Dictionary<IntPtr, Bot>.ValueCollection.Enumerator enumerator = bots.Values.GetEnumerator();
+		using Dictionary<System.IntPtr, Bot>.ValueCollection.Enumerator enumerator = bots.Values.GetEnumerator();
 		if (enumerator.MoveNext())
 		{
 			enumerator.Current.PlayExact(ExactClone.Latest(), loopClone);
@@ -615,7 +614,7 @@ public static class BotManager
 			Spawnables.Notify("Spawn a bot first");
 			return;
 		}
-		using Dictionary<IntPtr, Bot>.ValueCollection.Enumerator enumerator = bots.Values.GetEnumerator();
+		using Dictionary<System.IntPtr, Bot>.ValueCollection.Enumerator enumerator = bots.Values.GetEnumerator();
 		if (enumerator.MoveNext())
 		{
 			enumerator.Current.PlayClone(Clone.Last, loopClone);
@@ -655,10 +654,9 @@ public static class BotManager
 		float num = float.MaxValue;
 		foreach (Bot value in bots.Values)
 		{
-			if (!((Object)(object)value.Head == (Object)null) && !value.dead && !value.Down && !((Object)(object)head == (Object)null))
+			if (!(value.Head == null) && !value.dead && !value.Down && !(head == null))
 			{
-				Vector3 val = value.Head.position - head.position;
-				float magnitude = ((Vector3)(ref val)).magnitude;
+				float magnitude = (value.Head.position - head.position).magnitude;
 				if (magnitude < num)
 				{
 					num = magnitude;
@@ -678,7 +676,7 @@ public static class BotManager
 		}
 		GunMoves.Save();
 		string path = AssetFiles.SaveFolder("");
-		string text = Path.Combine(path, "backup_" + DateTime.Now.ToString("yyyyMMdd_HHmmss"));
+		string text = Path.Combine(path, "backup_" + System.DateTime.Now.ToString("yyyyMMdd_HHmmss"));
 		Directory.CreateDirectory(text);
 		int num = 0;
 		string[] array = new string[3] { "recordings", "lessons", "moves" };
@@ -717,8 +715,8 @@ public static class BotManager
 
 	private static Bot BotOf(Player_Health health)
 	{
-		RigManager val = (((Object)(object)health != (Object)null) ? ((Component)health).GetComponentInParent<RigManager>() : null);
-		if (!((Object)(object)val != (Object)null) || !BotRig.IsBot(val) || !bots.TryGetValue(((Il2CppObjectBase)(object)val).Pointer, out var value))
+		RigManager rigManager = ((health != null) ? health.GetComponentInParent<RigManager>() : null);
+		if (!(rigManager != null) || !BotRig.IsBot(rigManager) || !bots.TryGetValue(rigManager.Pointer, out var value))
 		{
 			return null;
 		}
@@ -729,9 +727,9 @@ public static class BotManager
 	{
 		try
 		{
-			return shutDown || (Object)(object)hand == (Object)null || !BotRig.IsBot(((Component)hand).GetComponentInParent<RigManager>());
+			return shutDown || hand == null || !BotRig.IsBot(hand.GetComponentInParent<RigManager>());
 		}
-		catch (Exception)
+		catch (System.Exception)
 		{
 			return true;
 		}
@@ -745,15 +743,15 @@ public static class BotManager
 		}
 		try
 		{
-			bool flag = (Object)(object)pouch != (Object)null && BotRig.IsBot(((Component)pouch).GetComponentInParent<RigManager>());
-			if (((Object)(object)pouch == (Object)null || flag) && !ammoSaid)
+			bool flag = pouch != null && BotRig.IsBot(pouch.GetComponentInParent<RigManager>());
+			if ((pouch == null || flag) && !ammoSaid)
 			{
 				ammoSaid = true;
-				Lab.Event("ammo: a call to " + (((Object)(object)pouch == (Object)null) ? "no pouch at all" : "a bot's pouch") + " left out");
+				Lab.Event("ammo: a call to " + ((pouch == null) ? "no pouch at all" : "a bot's pouch") + " left out");
 			}
-			return (Object)(object)pouch != (Object)null && !flag;
+			return pouch != null && !flag;
 		}
-		catch (Exception)
+		catch (System.Exception)
 		{
 			return true;
 		}
@@ -764,7 +762,7 @@ public static class BotManager
 		return AmmoWorks(__instance);
 	}
 
-	private static Exception AmmoFinalizer(Exception __exception)
+	private static System.Exception AmmoFinalizer(System.Exception __exception)
 	{
 		if (__exception != null)
 		{
@@ -789,24 +787,23 @@ public static class BotManager
 
 	private static void BotBumpPrefix(PlayerDamageReceiver __instance, Collision collision)
 	{
-		if (shutDown || bots.Count == 0 || (Object)(object)__instance == (Object)null || collision == null)
+		if (shutDown || bots.Count == 0 || __instance == null || collision == null)
 		{
 			return;
 		}
 		try
 		{
-			Vector3 impulse = collision.impulse;
-			if (!(((Vector3)(ref impulse)).sqrMagnitude < 25f))
+			if (!(collision.impulse.sqrMagnitude < 25f))
 			{
-				Find(((Component)__instance).GetComponentInParent<RigManager>())?.Bumped(__instance.bodyPart, collision);
+				Find(__instance.GetComponentInParent<RigManager>())?.Bumped(__instance.bodyPart, collision);
 			}
 		}
-		catch (Exception)
+		catch (System.Exception)
 		{
 		}
 	}
 
-	private static bool BotHitPrefix(Player_Health __instance, Attack attack, BodyPart part)
+	private static bool BotHitPrefix(Player_Health __instance, Attack attack, PlayerDamageReceiver.BodyPart part)
 	{
 		if (shutDown)
 		{
@@ -819,9 +816,9 @@ public static class BotManager
 		}
 		try
 		{
-			bot.TakeHit((attack != null) ? attack.damage : 0f, attack, part);
+			bot.TakeHit(attack?.damage ?? 0f, attack, part);
 		}
-		catch (Exception)
+		catch (System.Exception)
 		{
 		}
 		return false;
@@ -855,7 +852,7 @@ public static class BotManager
 
 	public static Bot Of(RigManager rig)
 	{
-		if (!((Object)(object)rig != (Object)null) || !bots.TryGetValue(((Il2CppObjectBase)(object)rig).Pointer, out var value))
+		if (!(rig != null) || !bots.TryGetValue(rig.Pointer, out var value))
 		{
 			return null;
 		}
@@ -874,7 +871,7 @@ public static class BotManager
 
 	public static bool IsEnemy(RigManager rig)
 	{
-		if ((Object)(object)rig != (Object)null && bots.TryGetValue(((Il2CppObjectBase)(object)rig).Pointer, out var value))
+		if (rig != null && bots.TryGetValue(rig.Pointer, out var value))
 		{
 			return value.enemy;
 		}
@@ -923,26 +920,25 @@ public static class BotManager
 	private static void BringAll()
 	{
 		Transform head = Player.Head;
-		if ((Object)(object)head == (Object)null)
+		if (head == null)
 		{
 			return;
 		}
-		Vector3 val = head.forward;
-		val.y = 0f;
-		val = ((((Vector3)(ref val)).sqrMagnitude < 0.001f) ? Vector3.forward : ((Vector3)(ref val)).normalized);
+		Vector3 forward = head.forward;
+		forward.y = 0f;
+		forward = ((forward.sqrMagnitude < 0.001f) ? Vector3.forward : forward.normalized);
 		int num = 0;
-		RaycastHit val4 = default(RaycastHit);
 		foreach (Bot value in bots.Values)
 		{
 			if (!value.Puppet)
 			{
-				Vector3 val2 = Vector3.Cross(Vector3.up, val) * (((num % 2 == 0) ? 1f : (-1f)) * (float)(num + 1) / 2f * 1.2f);
-				Vector3 val3 = head.position + val * 1.8f + val2;
-				if (Physics.Raycast(val3, Vector3.down, ref val4, 4f, -1, (QueryTriggerInteraction)1))
+				Vector3 vector = Vector3.Cross(Vector3.up, forward) * (((num % 2 == 0) ? 1f : (-1f)) * (float)(num + 1) / 2f * 1.2f);
+				Vector3 vector2 = head.position + forward * 1.8f + vector;
+				if (Physics.Raycast(vector2, Vector3.down, out var hitInfo, 4f, -1, QueryTriggerInteraction.Ignore))
 				{
-					val3 = ((RaycastHit)(ref val4)).point;
+					vector2 = hitInfo.point;
 				}
-				value.BringTo(val3, -val);
+				value.BringTo(vector2, -forward);
 				num++;
 			}
 		}
@@ -951,22 +947,21 @@ public static class BotManager
 	private static void Spawn(bool enemy)
 	{
 		Transform head = Player.Head;
-		if (!((Object)(object)head == (Object)null) && !spawning)
+		if (!(head == null) && !spawning)
 		{
-			Vector3 val = head.forward;
-			val.y = 0f;
-			val = ((((Vector3)(ref val)).sqrMagnitude < 0.001f) ? Vector3.forward : ((Vector3)(ref val)).normalized);
-			Vector3 val2 = head.position + val * 2f;
-			RaycastHit val3 = default(RaycastHit);
-			if (Physics.Raycast(val2, Vector3.down, ref val3, 4f, -1, (QueryTriggerInteraction)1))
+			Vector3 forward = head.forward;
+			forward.y = 0f;
+			forward = ((forward.sqrMagnitude < 0.001f) ? Vector3.forward : forward.normalized);
+			Vector3 vector = head.position + forward * 2f;
+			if (Physics.Raycast(vector, Vector3.down, out var hitInfo, 4f, -1, QueryTriggerInteraction.Ignore))
 			{
-				val2 = ((RaycastHit)(ref val3)).point;
+				vector = hitInfo.point;
 			}
 			else
 			{
-				val2.y -= 1.6f;
+				vector.y -= 1.6f;
 			}
-			SpawnAt(enemy, val2, -val, null);
+			SpawnAt(enemy, vector, -forward, null);
 		}
 	}
 
@@ -984,25 +979,25 @@ public static class BotManager
 	private static void Battle(int friends, int enemies)
 	{
 		Transform head = Player.Head;
-		if ((Object)(object)head == (Object)null)
+		if (head == null)
 		{
 			return;
 		}
-		Vector3 val = head.forward;
-		val.y = 0f;
-		val = ((((Vector3)(ref val)).sqrMagnitude < 0.001f) ? Vector3.forward : ((Vector3)(ref val)).normalized);
-		Vector3 val2 = Vector3.Cross(Vector3.up, val);
+		Vector3 forward = head.forward;
+		forward.y = 0f;
+		forward = ((forward.sqrMagnitude < 0.001f) ? Vector3.forward : forward.normalized);
+		Vector3 vector = Vector3.Cross(Vector3.up, forward);
 		int num = Mathf.Max(friends, enemies);
 		float num2 = Tuning.F("battle.apart", 40f);
 		float num3 = Tuning.F("battle.gap", 2.2f);
-		Vector3 val3 = head.position + val * 3f;
+		Vector3 vector2 = head.position + forward * 3f;
 		float num4;
 		for (num4 = num2; num4 >= 8f; num4 -= 3f)
 		{
 			int num5 = 0;
 			for (int i = 0; i < num; i++)
 			{
-				if (Ground(val3 + val * num4 + val2 * ((float)i - (float)(num - 1) * 0.5f) * num3, out var _))
+				if (Ground(vector2 + forward * num4 + vector * ((float)i - (float)(num - 1) * 0.5f) * num3, out var _))
 				{
 					num5++;
 				}
@@ -1019,14 +1014,14 @@ public static class BotManager
 		}
 		for (int j = 0; j < num; j++)
 		{
-			Vector3 val4 = val2 * ((float)j - (float)(num - 1) * 0.5f) * num3;
-			if (j < friends && Ground(val3 + val4, out var feet2))
+			Vector3 vector3 = vector * ((float)j - (float)(num - 1) * 0.5f) * num3;
+			if (j < friends && Ground(vector2 + vector3, out var feet2))
 			{
-				toMake.Enqueue((false, feet2, val));
+				toMake.Enqueue((false, feet2, forward));
 			}
-			if (j < enemies && Ground(val3 + val * num4 + val4, out var feet3))
+			if (j < enemies && Ground(vector2 + forward * num4 + vector3, out var feet3))
 			{
-				toMake.Enqueue((true, feet3, -val));
+				toMake.Enqueue((true, feet3, -forward));
 			}
 		}
 		Spawnables.Notify("Battle: " + friends + " against " + enemies + ", " + num4.ToString("0") + " m apart");
@@ -1036,16 +1031,15 @@ public static class BotManager
 	private static bool Ground(Vector3 near, out Vector3 feet)
 	{
 		feet = near;
-		RaycastHit val = default(RaycastHit);
-		if (!Physics.Raycast(near + Vector3.up * 3f, Vector3.down, ref val, 10f, -1, (QueryTriggerInteraction)1))
+		if (!Physics.Raycast(near + Vector3.up * 3f, Vector3.down, out var hitInfo, 10f, -1, QueryTriggerInteraction.Ignore))
 		{
 			return false;
 		}
-		if (((RaycastHit)(ref val)).normal.y < 0.7f || Physics.CheckSphere(((RaycastHit)(ref val)).point + Vector3.up * 1.1f, 0.3f, -1, (QueryTriggerInteraction)1))
+		if (hitInfo.normal.y < 0.7f || Physics.CheckSphere(hitInfo.point + Vector3.up * 1.1f, 0.3f, -1, QueryTriggerInteraction.Ignore))
 		{
 			return false;
 		}
-		feet = ((RaycastHit)(ref val)).point;
+		feet = hitInfo.point;
 		return true;
 	}
 
@@ -1079,26 +1073,26 @@ public static class BotManager
 		}
 	}
 
-	private static void SpawnAt(bool enemy, Vector3 feet, Vector3 facing, Action<Bot> made)
+	private static void SpawnAt(bool enemy, Vector3 feet, Vector3 facing, System.Action<Bot> made)
 	{
 		if (spawning)
 		{
 			return;
 		}
-		Vector3 val = -facing;
-		float yaw = Recorder.Yaw(-val);
+		Vector3 vector = -facing;
+		float yaw = Recorder.Yaw(-vector);
 		spawning = true;
-		BotRig.Create(feet, -val, delegate(RigManager rig)
+		BotRig.Create(feet, -vector, delegate(RigManager rig)
 		{
 			spawning = false;
 			if (!shutDown)
 			{
 				if (enemy)
 				{
-					new GameObject("BotEnemyMark").transform.SetParent(((Component)rig).transform, false);
+					new GameObject("BotEnemyMark").transform.SetParent(rig.transform, worldPositionStays: false);
 				}
 				Bot bot = new Bot(rig, yaw);
-				bots[((Il2CppObjectBase)(object)rig).Pointer] = bot;
+				bots[rig.Pointer] = bot;
 				BotRig.CopyPlayerAvatar(rig, null);
 				if (enemy)
 				{
@@ -1121,8 +1115,8 @@ public static class BotManager
 	{
 		toMake.Clear();
 		toArm.Clear();
-		List<IntPtr> list = new List<IntPtr>();
-		foreach (KeyValuePair<IntPtr, Bot> bot in bots)
+		List<System.IntPtr> list = new List<System.IntPtr>();
+		foreach (KeyValuePair<System.IntPtr, Bot> bot in bots)
 		{
 			if (!bot.Value.Puppet)
 			{
@@ -1130,15 +1124,15 @@ public static class BotManager
 				list.Add(bot.Key);
 			}
 		}
-		foreach (IntPtr item in list)
+		foreach (System.IntPtr item in list)
 		{
 			bots.Remove(item);
 		}
 	}
 
-	public static bool NetSpawn(bool enemy, string avatar, Vector3 scale, Vector3 feet, float yaw, Action<Bot> made)
+	public static bool NetSpawn(bool enemy, string avatar, Vector3 scale, Vector3 feet, float yaw, System.Action<Bot> made)
 	{
-		if (spawning || shutDown || (Object)(object)Player.Head == (Object)null)
+		if (spawning || shutDown || Player.Head == null)
 		{
 			return false;
 		}
@@ -1146,7 +1140,7 @@ public static class BotManager
 		BotRig.Create(feet, Quaternion.Euler(0f, yaw, 0f) * Vector3.forward, delegate(RigManager rig)
 		{
 			spawning = false;
-			if (shutDown || (Object)(object)rig == (Object)null)
+			if (shutDown || rig == null)
 			{
 				made(null);
 			}
@@ -1154,10 +1148,10 @@ public static class BotManager
 			{
 				if (enemy)
 				{
-					new GameObject("BotEnemyMark").transform.SetParent(((Component)rig).transform, false);
+					new GameObject("BotEnemyMark").transform.SetParent(rig.transform, worldPositionStays: false);
 				}
 				Bot bot = new Bot(rig, yaw);
-				bots[((Il2CppObjectBase)(object)rig).Pointer] = bot;
+				bots[rig.Pointer] = bot;
 				made(bot);
 				bot.NetWear(avatar, scale);
 			}
@@ -1171,9 +1165,9 @@ public static class BotManager
 		{
 			return;
 		}
-		IntPtr key = IntPtr.Zero;
+		System.IntPtr key = System.IntPtr.Zero;
 		bool flag = false;
-		foreach (KeyValuePair<IntPtr, Bot> bot2 in bots)
+		foreach (KeyValuePair<System.IntPtr, Bot> bot2 in bots)
 		{
 			if (bot2.Value == bot)
 			{
@@ -1186,7 +1180,7 @@ public static class BotManager
 		{
 			bot.Remove();
 		}
-		catch (Exception)
+		catch (System.Exception)
 		{
 		}
 		if (flag)
@@ -1202,7 +1196,7 @@ public static class BotManager
 			return;
 		}
 		PrefixCalls++;
-		Bot bot = Find(((Rig)__instance).manager);
+		Bot bot = Find(__instance.manager);
 		if (bot == null)
 		{
 			PrefixNoBot++;
@@ -1219,16 +1213,16 @@ public static class BotManager
 		}
 	}
 
-	private static void EarlyPrefix(OpenControllerRig __instance, ref Action<bool> __state)
+	private static void EarlyPrefix(OpenControllerRig __instance, ref Il2CppSystem.Action<bool> __state)
 	{
 		__state = OpenControllerRig.OnPauseStateChange;
-		if (!shutDown && BotRig.IsBot(((Rig)__instance).manager))
+		if (!shutDown && BotRig.IsBot(__instance.manager))
 		{
 			OpenControllerRig.OnPauseStateChange = null;
 		}
 	}
 
-	private static void EarlyPostfix(ref Action<bool> __state)
+	private static void EarlyPostfix(ref Il2CppSystem.Action<bool> __state)
 	{
 		OpenControllerRig.OnPauseStateChange = __state;
 	}
@@ -1237,7 +1231,7 @@ public static class BotManager
 	{
 		if (!shutDown)
 		{
-			return !BotRig.IsBot(((Rig)__instance).manager);
+			return !BotRig.IsBot(__instance.manager);
 		}
 		return true;
 	}
@@ -1248,10 +1242,10 @@ public static class BotManager
 		{
 			return;
 		}
-		Bot bot = Find(((Rig)__instance).manager);
+		Bot bot = Find(__instance.manager);
 		if (bot == null)
 		{
-			if (ExactClone.Recording && (Object)(object)((Rig)__instance).manager == (Object)(object)Player.RigManager)
+			if (ExactClone.Recording && __instance.manager == Player.RigManager)
 			{
 				ExactClone.NoteMove(axis, inputPressed);
 			}
@@ -1259,7 +1253,7 @@ public static class BotManager
 		else if (!bot.ExactMove(ref axis, ref inputPressed))
 		{
 			axis = bot.Walk;
-			inputPressed = ((Vector2)(ref axis)).sqrMagnitude > 0.0004f;
+			inputPressed = axis.sqrMagnitude > 0.0004f;
 		}
 	}
 

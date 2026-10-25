@@ -151,7 +151,7 @@ public static class MotionLibrary
 					{
 						list3.Add(frame.enemyDistance);
 					}
-					float magnitude = ((Vector2)(ref frame.stick)).magnitude;
+					float magnitude = frame.stick.magnitude;
 					float num4 = Speed(list4, j);
 					switch ((!(magnitude < 0.12f)) ? ((num4 >= 2.9f) ? Gait.Run : ((num4 > 0.3f) ? Gait.Walk : For(magnitude))) : Gait.Idle)
 					{
@@ -240,10 +240,8 @@ public static class MotionLibrary
 			float num3 = frames[i].time - frames[i - 1].time;
 			if (!(num3 <= 0f))
 			{
-				Vector3 val = frames[i].leftPos - frames[i - 1].leftPos;
-				float magnitude = ((Vector3)(ref val)).magnitude;
-				val = frames[i].rightPos - frames[i - 1].rightPos;
-				float magnitude2 = ((Vector3)(ref val)).magnitude;
+				float magnitude = (frames[i].leftPos - frames[i - 1].leftPos).magnitude;
+				float magnitude2 = (frames[i].rightPos - frames[i - 1].rightPos).magnitude;
 				if (magnitude / num3 > 7f || magnitude2 / num3 > 7f || Mathf.Abs(frames[i].height - frames[i - 1].height) / num3 > 4f)
 				{
 					return false;
@@ -277,15 +275,11 @@ public static class MotionLibrary
 			}
 			if (i > 0)
 			{
-				float num3 = num2;
-				Vector3 val = array[i].leftPos - array[i - 1].leftPos;
-				float magnitude = ((Vector3)(ref val)).magnitude;
-				val = array[i].rightPos - array[i - 1].rightPos;
-				num2 = num3 + (magnitude + ((Vector3)(ref val)).magnitude);
+				num2 += (array[i].leftPos - array[i - 1].leftPos).magnitude + (array[i].rightPos - array[i - 1].rightPos).magnitude;
 			}
 		}
-		float num4 = Mathf.Max(0.5f, array[^1].time - array[0].time);
-		tags[array] = (num * 2 > array.Length, num2 / num4);
+		float num3 = Mathf.Max(0.5f, array[^1].time - array[0].time);
+		tags[array] = (num * 2 > array.Length, num2 / num3);
 		if (num * 2 > array.Length)
 		{
 			tenseCount[kind]++;
@@ -393,9 +387,8 @@ public static class MotionLibrary
 		{
 			return 0f;
 		}
-		Vector3 val = frames[i].headWorld - frames[num].headWorld;
-		Vector2 val2 = new Vector2(val.x, val.z);
-		return ((Vector2)(ref val2)).magnitude / num2;
+		Vector3 vector = frames[i].headWorld - frames[num].headWorld;
+		return new Vector2(vector.x, vector.z).magnitude / num2;
 	}
 
 	private static int Kind(Frame f, float speed)
@@ -408,31 +401,23 @@ public static class MotionLibrary
 		{
 			return -1;
 		}
-		if (!(f.leftPos.y > f.height) && !(f.rightPos.y > f.height))
+		if (f.leftPos.y > f.height || f.rightPos.y > f.height || new Vector2(f.leftPos.x, f.leftPos.z).magnitude > 0.65f || new Vector2(f.rightPos.x, f.rightPos.z).magnitude > 0.65f)
 		{
-			Vector2 val = new Vector2(f.leftPos.x, f.leftPos.z);
-			if (!(((Vector2)(ref val)).magnitude > 0.65f))
-			{
-				val = new Vector2(f.rightPos.x, f.rightPos.z);
-				if (!(((Vector2)(ref val)).magnitude > 0.65f))
-				{
-					if (((Vector2)(ref f.stick)).magnitude < 0.12f && speed < 0.5f)
-					{
-						return 0;
-					}
-					if (speed < 0.3f)
-					{
-						return (int)For(((Vector2)(ref f.stick)).magnitude);
-					}
-					if (!(speed >= 2.9f))
-					{
-						return 1;
-					}
-					return 2;
-				}
-			}
+			return -1;
 		}
-		return -1;
+		if (f.stick.magnitude < 0.12f && speed < 0.5f)
+		{
+			return 0;
+		}
+		if (speed < 0.3f)
+		{
+			return (int)For(f.stick.magnitude);
+		}
+		if (!(speed >= 2.9f))
+		{
+			return 1;
+		}
+		return 2;
 	}
 
 	public static Frame Relax(Frame f, float amount)
@@ -449,8 +434,7 @@ public static class MotionLibrary
 	private static Vector3 Relax(Vector3 hand, float height, float side, float amount)
 	{
 		float num = height - hand.y;
-		Vector2 val = new Vector2(hand.x, hand.z);
-		float magnitude = ((Vector2)(ref val)).magnitude;
+		float magnitude = new Vector2(hand.x, hand.z).magnitude;
 		float num2 = Mathf.Clamp01((num - 0.05f) / 0.2f) * Mathf.Clamp01((0.75f - num) / 0.2f) * Mathf.Clamp01((0.55f - magnitude) / 0.15f);
 		num2 *= amount;
 		if (num2 <= 0f)
@@ -502,9 +486,9 @@ public static class MotionLibrary
 			}
 			if (num2 <= 0f)
 			{
-				return list[Random.Range(0, list.Count)];
+				return list[UnityEngine.Random.Range(0, list.Count)];
 			}
-			float num3 = Random.value * num2;
+			float num3 = UnityEngine.Random.value * num2;
 			foreach (Frame[] item2 in list)
 			{
 				if (!lately.Contains(item2))

@@ -26,7 +26,7 @@ public static class FusionLink
 		{
 			ModuleMessageManager.TagToHandlerLookup.Remove(5929072799880532017L);
 			ModuleMessageManager.Handlers.Remove(value);
-			ModuleMessageManager.TypeToHandlerLookup.Remove(((object)value).GetType());
+			ModuleMessageManager.TypeToHandlerLookup.Remove(value.GetType());
 		}
 		DoppelMessage doppelMessage = new DoppelMessage();
 		FieldInfo? field = typeof(ModuleMessageHandler).GetField("_tag", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -35,10 +35,10 @@ public static class FusionLink
 			throw new Exception("this Fusion keeps its handlers' numbers some other way");
 		}
 		field.SetValue(doppelMessage, 5929072799880532017L);
-		((MessageHandler)doppelMessage).NetAttributes = Array.Empty<NetAttribute>();
-		ModuleMessageManager.Handlers.Add((ModuleMessageHandler)(object)doppelMessage);
-		ModuleMessageManager.TypeToHandlerLookup[typeof(DoppelMessage)] = (ModuleMessageHandler)(object)doppelMessage;
-		ModuleMessageManager.TagToHandlerLookup[5929072799880532017L] = (ModuleMessageHandler)(object)doppelMessage;
+		doppelMessage.NetAttributes = Array.Empty<Net.NetAttribute>();
+		ModuleMessageManager.Handlers.Add(doppelMessage);
+		ModuleMessageManager.TypeToHandlerLookup[typeof(DoppelMessage)] = doppelMessage;
+		ModuleMessageManager.TagToHandlerLookup[5929072799880532017L] = doppelMessage;
 		NetBots.Online = () => NetworkSceneManager.IsLevelNetworked && PlayerIDManager.HasOtherPlayers;
 		NetBots.Send = delegate(byte[] bytes, bool sure)
 		{
@@ -61,10 +61,10 @@ public static class FusionLink
 			{
 				if (player != null && player.NetworkEntity != null && !player.NetworkEntity.IsOwner && player.HasRig)
 				{
-					RigManager val2 = ((player.RigRefs != null) ? player.RigRefs.RigManager : null);
-					if ((Object)(object)val2 != (Object)null)
+					RigManager rigManager = ((player.RigRefs != null) ? player.RigRefs.RigManager : null);
+					if (rigManager != null)
 					{
-						list.Add(val2);
+						list.Add(rigManager);
 					}
 				}
 			}
@@ -74,9 +74,8 @@ public static class FusionLink
 		NetBots.Hide = Hide;
 		NetBots.Shared = delegate(ushort number)
 		{
-			NetworkEntity entity = NetworkEntityManager.IDManager.RegisteredEntities.GetEntity(number);
-			IMarrowEntityExtender val = ((entity != null) ? entity.GetExtender<IMarrowEntityExtender>() : null);
-			return (val == null || !((Object)(object)val.MarrowEntity != (Object)null)) ? null : ((Component)val.MarrowEntity).transform;
+			IMarrowEntityExtender marrowEntityExtender = NetworkEntityManager.IDManager.RegisteredEntities.GetEntity(number)?.GetExtender<IMarrowEntityExtender>();
+			return (marrowEntityExtender == null || !(marrowEntityExtender.MarrowEntity != null)) ? null : marrowEntityExtender.MarrowEntity.transform;
 		};
 	}
 
@@ -96,24 +95,23 @@ public static class FusionLink
 
 	private static int Hide(RigManager rig)
 	{
-		if ((Object)(object)rig == (Object)null)
+		if (rig == null)
 		{
 			return 0;
 		}
-		if ((Object)(object)((Component)rig).GetComponent<AntiHasher>() == (Object)null)
+		if (rig.GetComponent<AntiHasher>() == null)
 		{
-			((Component)rig).gameObject.AddComponent<AntiHasher>();
+			rig.gameObject.AddComponent<AntiHasher>();
 		}
 		int num = 0;
-		NetworkEntity val = default(NetworkEntity);
-		foreach (MarrowEntity componentsInChild in ((Component)rig).GetComponentsInChildren<MarrowEntity>(true))
+		foreach (MarrowEntity componentsInChild in rig.GetComponentsInChildren<MarrowEntity>(includeInactive: true))
 		{
-			if (!((Object)(object)componentsInChild == (Object)null))
+			if (!(componentsInChild == null))
 			{
 				MarrowEntityPatches.HashTable.RemoveComponent(componentsInChild);
-				if (IMarrowEntityExtender.Cache.TryGet(componentsInChild, ref val) && val != null && val.GetExtender<NetworkPlayer>() == null)
+				if (IMarrowEntityExtender.Cache.TryGet(componentsInChild, out var value) && value != null && value.GetExtender<NetworkPlayer>() == null)
 				{
-					NetworkEntityManager.IDManager.UnregisterEntity(val);
+					NetworkEntityManager.IDManager.UnregisterEntity(value);
 					num++;
 				}
 			}
@@ -123,36 +121,36 @@ public static class FusionLink
 
 	private static ushort Own(MarrowEntity thing)
 	{
-		NetworkEntity val = IMarrowEntityExtender.Cache.Get(thing);
-		if (val == null || !val.IsRegistered)
+		NetworkEntity networkEntity = IMarrowEntityExtender.Cache.Get(thing);
+		if (networkEntity == null || !networkEntity.IsRegistered)
 		{
 			return ushort.MaxValue;
 		}
-		if (!val.IsOwner)
+		if (!networkEntity.IsOwner)
 		{
-			NetworkEntityManager.TakeOwnership(val);
+			NetworkEntityManager.TakeOwnership(networkEntity);
 		}
-		return val.ID;
+		return networkEntity.ID;
 	}
 
 	private static void Shot(Gun gun)
 	{
-		NetworkEntity val = GunExtender.Cache.Get(gun);
-		if (val == null || !NetworkInfo.HasServer)
+		NetworkEntity networkEntity = GunExtender.Cache.Get(gun);
+		if (networkEntity == null || !NetworkInfo.HasServer)
 		{
 			return;
 		}
-		if (!val.IsOwner)
+		if (!networkEntity.IsOwner)
 		{
-			NetworkEntityManager.TakeOwnership(val);
+			NetworkEntityManager.TakeOwnership(networkEntity);
 		}
-		GunExtender extender = val.GetExtender<GunExtender>();
+		GunExtender extender = networkEntity.GetExtender<GunExtender>();
 		if (extender != null)
 		{
-			ushort? index = ((EntityComponentArrayExtender<Gun>)(object)extender).GetIndex(gun);
+			ushort? index = extender.GetIndex(gun);
 			if (index.HasValue)
 			{
-				MessageRelay.RelayModule<GunShotMessage, GunShotData>(GunShotData.Create((byte)((gun._magState != null) ? ((uint)Mathf.Clamp(gun._magState.AmmoCount, 0, 255)) : 0u), val.ID, (byte)index.Value), CommonMessageRoutes.ReliableToOtherClients);
+				MessageRelay.RelayModule<GunShotMessage, GunShotData>(GunShotData.Create((byte)((gun._magState != null) ? ((uint)Mathf.Clamp(gun._magState.AmmoCount, 0, 255)) : 0u), networkEntity.ID, (byte)index.Value), CommonMessageRoutes.ReliableToOtherClients);
 			}
 		}
 	}

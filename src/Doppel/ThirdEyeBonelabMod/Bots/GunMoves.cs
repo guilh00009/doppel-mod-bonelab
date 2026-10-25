@@ -6,7 +6,6 @@ using BoneLib;
 using Il2CppSLZ.Marrow;
 using Il2CppSLZ.Marrow.Interaction;
 using Il2CppSLZ.Marrow.Pool;
-using Il2CppSLZ.Marrow.Warehouse;
 using MelonLoader;
 using UnityEngine;
 
@@ -222,10 +221,10 @@ public static class GunMoves
 	{
 		try
 		{
-			Poolee componentInParent = ((Component)gun).GetComponentInParent<Poolee>();
-			if ((Object)(object)componentInParent != (Object)null && (Object)(object)componentInParent.SpawnableCrate != (Object)null)
+			Poolee componentInParent = gun.GetComponentInParent<Poolee>();
+			if (componentInParent != null && componentInParent.SpawnableCrate != null)
 			{
-				string iD = ((Scannable)componentInParent.SpawnableCrate).Barcode.ID;
+				string iD = componentInParent.SpawnableCrate.Barcode.ID;
 				NoteKind(iD, gun);
 				return iD;
 			}
@@ -245,10 +244,9 @@ public static class GunMoves
 		float num = 0.2f;
 		try
 		{
-			if ((Object)(object)gun.triggerGrip != (Object)null && (Object)(object)gun.firePointTransform != (Object)null)
+			if (gun.triggerGrip != null && gun.firePointTransform != null)
 			{
-				Vector3 val = gun.firePointTransform.position - ((Component)gun.triggerGrip).transform.position;
-				num = ((Vector3)(ref val)).magnitude;
+				num = (gun.firePointTransform.position - gun.triggerGrip.transform.position).magnitude;
 			}
 		}
 		catch (Exception)
@@ -276,18 +274,8 @@ public static class GunMoves
 			string text = KindOf(gun);
 			Data.kinds[barcode] = text;
 			dirty = true;
-			float num;
-			if (!((Object)(object)gun.triggerGrip != (Object)null) || !((Object)(object)gun.firePointTransform != (Object)null))
-			{
-				num = 0f;
-			}
-			else
-			{
-				Vector3 val = gun.firePointTransform.position - ((Component)gun.triggerGrip).transform.position;
-				num = ((Vector3)(ref val)).magnitude;
-			}
-			float num2 = num;
-			Lab.Event("gun kind: " + ((Object)gun).name + " is a " + text + " (" + num2.ToString("0.00") + " m from handle to muzzle)");
+			float num = ((gun.triggerGrip != null && gun.firePointTransform != null) ? (gun.firePointTransform.position - gun.triggerGrip.transform.position).magnitude : 0f);
+			Lab.Event("gun kind: " + gun.name + " is a " + text + " (" + num.ToString("0.00") + " m from handle to muzzle)");
 		}
 	}
 
@@ -300,9 +288,9 @@ public static class GunMoves
 		scannedAt = Time.time;
 		try
 		{
-			foreach (Gun item in Object.FindObjectsOfType<Gun>())
+			foreach (Gun item in UnityEngine.Object.FindObjectsOfType<Gun>())
 			{
-				if ((Object)(object)item != (Object)null && (Object)(object)item.triggerGrip != (Object)null)
+				if (item != null && item.triggerGrip != null)
 				{
 					KeyOf(item, twoHanded: false);
 				}
@@ -398,7 +386,7 @@ public static class GunMoves
 				list = gunRecord.reloads;
 			}
 		}
-		return list?[Random.Range(0, list.Count)];
+		return list?[UnityEngine.Random.Range(0, list.Count)];
 	}
 
 	public static Punch PunchFor(bool right)
@@ -415,7 +403,7 @@ public static class GunMoves
 		{
 			return null;
 		}
-		return list[Random.Range(0, list.Count)];
+		return list[UnityEngine.Random.Range(0, list.Count)];
 	}
 
 	private static void WatchFists(OpenControllerRig controls)
@@ -430,8 +418,8 @@ public static class GunMoves
 		Moment moment = default(Moment);
 		moment.t = time;
 		moment.head = Local(vrRoot, controls.headset);
-		moment.right = Local(vrRoot, ((Component)((ControllerRig)controls).rightController).transform);
-		moment.left = Local(vrRoot, ((Component)((ControllerRig)controls).leftController).transform);
+		moment.right = Local(vrRoot, controls.rightController.transform);
+		moment.left = Local(vrRoot, controls.leftController.transform);
 		Moment item = moment;
 		moments.Add(item);
 		while (moments.Count > 0 && time - moments[0].t > 1f)
@@ -444,17 +432,17 @@ public static class GunMoves
 		}
 		Moment moment2 = moments[moments.Count - 2];
 		float num = Mathf.Max(item.t - moment2.t, 0.001f);
-		Vector3 val = item.head.rotation * Vector3.forward;
+		Vector3 rhs = item.head.rotation * Vector3.forward;
 		if (punchPeak < 0f && time - PlayerPunchedAt > 0.5f)
 		{
 			bool[] array = new bool[2] { true, false };
 			foreach (bool flag in array)
 			{
-				Hand val2 = (flag ? Player.RightHand : Player.LeftHand);
-				if (!((Object)(object)val2 == (Object)null) && !((Object)(object)val2.m_CurrentAttachedGO != (Object)null))
+				Hand hand = (flag ? Player.RightHand : Player.LeftHand);
+				if (!(hand == null) && !(hand.m_CurrentAttachedGO != null))
 				{
-					Vector3 val3 = ((flag ? item.right.position : item.left.position) - (flag ? moment2.right.position : moment2.left.position)) / num;
-					if (((Vector3)(ref val3)).magnitude > Tuning.F("teach.punch.speed", 3f) && Vector3.Dot(val3, val) > Tuning.F("teach.punch.forward", 1.8f))
+					Vector3 lhs = ((flag ? item.right.position : item.left.position) - (flag ? moment2.right.position : moment2.left.position)) / num;
+					if (lhs.magnitude > Tuning.F("teach.punch.speed", 3f) && Vector3.Dot(lhs, rhs) > Tuning.F("teach.punch.forward", 1.8f))
 					{
 						punchPeak = time;
 						punchRight = flag;
@@ -580,19 +568,19 @@ public static class GunMoves
 			return;
 		}
 		OpenControllerRig controllerRig = Player.ControllerRig;
-		if ((Object)(object)controllerRig != (Object)null && (Object)(object)controllerRig.vrRoot != (Object)null && (Object)(object)controllerRig.headset != (Object)null && (Object)(object)((ControllerRig)controllerRig).rightController != (Object)null && (Object)(object)((ControllerRig)controllerRig).leftController != (Object)null)
+		if (controllerRig != null && controllerRig.vrRoot != null && controllerRig.headset != null && controllerRig.rightController != null && controllerRig.leftController != null)
 		{
 			WatchFists(controllerRig);
 		}
 		Gun componentInHand = Player.GetComponentInHand<Gun>(Player.RightHand);
 		Gun componentInHand2 = Player.GetComponentInHand<Gun>(Player.LeftHand);
 		Gun gun = componentInHand ?? componentInHand2;
-		if ((Object)(object)gun != (Object)null && (((Object)gun).name.ToUpperInvariant().Contains("SPAWN") || ((Object)gun).name.ToUpperInvariant().Contains("NIMBUS")))
+		if (gun != null && (gun.name.ToUpperInvariant().Contains("SPAWN") || gun.name.ToUpperInvariant().Contains("NIMBUS")))
 		{
 			gun = null;
 		}
-		bool flag = (Object)(object)componentInHand == (Object)null && (Object)(object)componentInHand2 != (Object)null;
-		if ((Object)(object)gun != (Object)null && (Object)(object)gun.triggerGrip != (Object)null && gun.triggerGrip.attachedHands != null)
+		bool flag = componentInHand == null && componentInHand2 != null;
+		if (gun != null && gun.triggerGrip != null && gun.triggerGrip.attachedHands != null)
 		{
 			bool flag2 = gun.triggerGrip.attachedHands.Contains(Player.LeftHand);
 			bool flag3 = gun.triggerGrip.attachedHands.Contains(Player.RightHand);
@@ -601,22 +589,22 @@ public static class GunMoves
 				flag = flag2;
 			}
 		}
-		Hand val = (flag ? Player.RightHand : Player.LeftHand);
-		if ((Object)(object)controllerRig == (Object)null || (Object)(object)controllerRig.vrRoot == (Object)null || (Object)(object)controllerRig.headset == (Object)null || (Object)(object)gun == (Object)null || (Object)(object)gun.firePointTransform == (Object)null)
+		Hand hand = (flag ? Player.RightHand : Player.LeftHand);
+		if (controllerRig == null || controllerRig.vrRoot == null || controllerRig.headset == null || gun == null || gun.firePointTransform == null)
 		{
 			watched = null;
 			taking = null;
 			return;
 		}
-		bool flag4 = OtherHandOn(gun, val);
+		bool flag4 = OtherHandOn(gun, hand);
 		string text = KeyOf(gun, flag4);
 		Transform vrRoot = controllerRig.vrRoot;
 		Bot.Pose head = Local(vrRoot, controllerRig.headset);
-		Bot.Pose pose = Local(vrRoot, ((Component)(flag ? ((ControllerRig)controllerRig).leftController : ((ControllerRig)controllerRig).rightController)).transform);
-		Bot.Pose pose2 = Local(vrRoot, ((Component)(flag ? ((ControllerRig)controllerRig).rightController : ((ControllerRig)controllerRig).leftController)).transform);
+		Bot.Pose pose = Local(vrRoot, (flag ? controllerRig.leftController : controllerRig.rightController).transform);
+		Bot.Pose pose2 = Local(vrRoot, (flag ? controllerRig.rightController : controllerRig.leftController).transform);
 		Bot.Pose pose3 = Local(vrRoot, gun.firePointTransform);
 		bool flag5 = Safe(() => gun.HasMagazine(), otherwise: true);
-		if ((Object)(object)gun != (Object)(object)watched)
+		if (gun != watched)
 		{
 			watched = gun;
 			hadMagazine = flag5;
@@ -637,7 +625,7 @@ public static class GunMoves
 		hadMagazine = flag5;
 		if (taking != null)
 		{
-			Take(gun, head, pose, pose2, flag5, val, flag);
+			Take(gun, head, pose, pose2, flag5, hand, flag);
 		}
 		else
 		{
@@ -646,25 +634,21 @@ public static class GunMoves
 				return;
 			}
 			sampleAt = Time.time + 0.1f;
-			bool flag6 = (flag ? ((ControllerRig)controllerRig).leftController : ((ControllerRig)controllerRig).rightController)._primaryAxis > 0.5f || Time.time - PlayerWatch.FiredAt < 0.6f;
-			Rigidbody componentInParent = ((Component)gun).GetComponentInParent<Rigidbody>();
-			if (!flag6 && (Object)(object)componentInParent != (Object)null)
+			bool flag6 = (flag ? controllerRig.leftController : controllerRig.rightController)._primaryAxis > 0.5f || Time.time - PlayerWatch.FiredAt < 0.6f;
+			Rigidbody componentInParent = gun.GetComponentInParent<Rigidbody>();
+			if (!flag6 && componentInParent != null && componentInParent.angularVelocity.magnitude > 1.2f)
 			{
-				Vector3 angularVelocity = componentInParent.angularVelocity;
-				if (((Vector3)(ref angularVelocity)).magnitude > 1.2f)
-				{
-					return;
-				}
+				return;
 			}
 			float num = Vector3.Angle(head.rotation * Vector3.forward, pose3.rotation * Vector3.forward);
 			Bot.Pose pose4 = head.Inverse() * pose;
 			Bot.Pose pose5 = head.Inverse() * pose2;
-			Quaternion val2 = Quaternion.Inverse(head.rotation) * pose3.rotation;
+			Quaternion quaternion = Quaternion.Inverse(head.rotation) * pose3.rotation;
 			if (flag)
 			{
 				pose4 = Mirrored(pose4);
 				pose5 = Mirrored(pose5);
-				val2 = Mirrored(new Bot.Pose(Vector3.zero, val2)).rotation;
+				quaternion = Mirrored(new Bot.Pose(Vector3.zero, quaternion)).rotation;
 			}
 			if (num < 12f || (flag6 && num < 50f))
 			{
@@ -673,11 +657,11 @@ public static class GunMoves
 					Record(text).aim = null;
 					Lab.Event("teach: the aimed hold of " + text + " begun afresh" + (flag ? " (left-handed, learned mirrored)" : "") + (flag4 ? ", two hands" : ", one hand"));
 				}
-				Add(Record(text), aimed: true, pose4, flag4 ? new Bot.Pose?(pose5) : null, val2);
+				Add(Record(text), aimed: true, pose4, flag4 ? new Bot.Pose?(pose5) : null, quaternion);
 			}
 			else if (num > 30f && !flag6)
 			{
-				Add(Record(text), aimed: false, pose4, flag4 ? new Bot.Pose?(pose5) : null, val2);
+				Add(Record(text), aimed: false, pose4, flag4 ? new Bot.Pose?(pose5) : null, quaternion);
 			}
 		}
 	}
@@ -699,9 +683,9 @@ public static class GunMoves
 		if (num >= takeFrameAt)
 		{
 			takeFrameAt = num + 1f / 30f;
-			Quaternion val = Quaternion.Euler(0f, ((Quaternion)(ref head.rotation)).eulerAngles.y, 0f);
-			Bot.Pose pose = new Bot.Pose(head.position, val);
-			Bot.Pose p = new Bot.Pose(Vector3.zero, Quaternion.Inverse(val) * head.rotation);
+			Quaternion rotation = Quaternion.Euler(0f, head.rotation.eulerAngles.y, 0f);
+			Bot.Pose pose = new Bot.Pose(head.position, rotation);
+			Bot.Pose p = new Bot.Pose(Vector3.zero, Quaternion.Inverse(rotation) * head.rotation);
 			Bot.Pose p2 = pose.Inverse() * right;
 			Bot.Pose p3 = pose.Inverse() * left;
 			if (lefty)
@@ -718,8 +702,8 @@ public static class GunMoves
 				left = P(p3)
 			});
 		}
-		GameObject val2 = (((Object)(object)otherHand != (Object)null) ? otherHand.m_CurrentAttachedGO : null);
-		if (taking.grab < 0f && (Object)(object)val2 != (Object)null && (Object)(object)val2.GetComponentInParent<Magazine>() != (Object)null)
+		GameObject gameObject = ((otherHand != null) ? otherHand.m_CurrentAttachedGO : null);
+		if (taking.grab < 0f && gameObject != null && gameObject.GetComponentInParent<Magazine>() != null)
 		{
 			taking.grab = num;
 		}
@@ -727,7 +711,7 @@ public static class GunMoves
 		{
 			taking.insert = num;
 		}
-		bool flag = Safe(() => (int)gun.cartridgeState == 1, otherwise: false);
+		bool flag = Safe(() => gun.cartridgeState == Gun.CartridgeStates.UNSPENT, otherwise: false);
 		if (taking.insert >= 0f && taking.rack < 0f && flag && num - taking.insert > 0.15f)
 		{
 			taking.rack = num;
@@ -793,15 +777,15 @@ public static class GunMoves
 
 	private static bool OtherHandOn(Gun gun, Hand other)
 	{
-		GameObject val = (((Object)(object)other != (Object)null) ? other.m_CurrentAttachedGO : null);
-		if ((Object)(object)val == (Object)null || (Object)(object)val.GetComponentInParent<Magazine>() != (Object)null)
+		GameObject gameObject = ((other != null) ? other.m_CurrentAttachedGO : null);
+		if (gameObject == null || gameObject.GetComponentInParent<Magazine>() != null)
 		{
 			return false;
 		}
-		MarrowEntity componentInParent = ((Component)gun).GetComponentInParent<MarrowEntity>();
-		if ((Object)(object)componentInParent != (Object)null)
+		MarrowEntity componentInParent = gun.GetComponentInParent<MarrowEntity>();
+		if (componentInParent != null)
 		{
-			return (Object)(object)val.GetComponentInParent<MarrowEntity>() == (Object)(object)componentInParent;
+			return gameObject.GetComponentInParent<MarrowEntity>() == componentInParent;
 		}
 		return false;
 	}

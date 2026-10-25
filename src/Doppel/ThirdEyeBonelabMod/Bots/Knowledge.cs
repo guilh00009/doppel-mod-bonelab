@@ -121,7 +121,7 @@ public static class Knowledge
 			{
 				return otherwise;
 			}
-			return list[Random.Range(0, list.Count)] * Random.Range(0.88f, 1.12f);
+			return list[UnityEngine.Random.Range(0, list.Count)] * UnityEngine.Random.Range(0.88f, 1.12f);
 		}
 
 		public static float Median(List<float> list, float otherwise)
@@ -384,7 +384,7 @@ public static class Knowledge
 			int num5 = value2?.times ?? 0;
 			float num6 = (num3 + 1f) / (num4 + 1f);
 			float num7 = 1.2f * Mathf.Sqrt(Mathf.Log((float)num + 1f) / ((float)num5 + 1f));
-			float num8 = num6 + num7 + Random.value * 0.3f;
+			float num8 = num6 + num7 + UnityEngine.Random.value * 0.3f;
 			if (num8 > num2)
 			{
 				num2 = num8;

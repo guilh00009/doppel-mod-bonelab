@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using BoneLib;
-using Il2CppInterop.Runtime.InteropTypes;
 using Il2CppSLZ.Marrow;
 using UnityEngine;
 
@@ -26,9 +25,9 @@ public static class WallGrab
 
 	public static bool Holding(Hand hand)
 	{
-		if ((Object)(object)hand != (Object)null)
+		if (hand != null)
 		{
-			return held.ContainsKey(((Il2CppObjectBase)(object)hand).Pointer);
+			return held.ContainsKey(hand.Pointer);
 		}
 		return false;
 	}
@@ -45,47 +44,47 @@ public static class WallGrab
 		}
 		try
 		{
-			Hand[] array = (Hand[])(object)new Hand[2]
+			Hand[] array = new Hand[2]
 			{
 				Player.LeftHand,
 				Player.RightHand
 			};
 			OpenControllerRig controllerRig = Player.ControllerRig;
-			BaseController[] array2 = (BaseController[])(object)new BaseController[2]
+			BaseController[] array2 = new BaseController[2]
 			{
-				((Object)(object)controllerRig != (Object)null) ? ((ControllerRig)controllerRig).leftController : null,
-				((Object)(object)controllerRig != (Object)null) ? ((ControllerRig)controllerRig).rightController : null
+				(controllerRig != null) ? controllerRig.leftController : null,
+				(controllerRig != null) ? controllerRig.rightController : null
 			};
 			for (int i = 0; i < 2; i++)
 			{
-				Hand val = array[i];
-				if ((Object)(object)val == (Object)null || (Object)(object)array2[i] == (Object)null)
+				Hand hand = array[i];
+				if (hand == null || array2[i] == null)
 				{
 					continue;
 				}
 				if (!(array2[i]._solvedGrip >= OpenController.grabThreshold))
 				{
 					closedAt[i] = -1f;
-					Release(val);
+					Release(hand);
 					continue;
 				}
 				if (closedAt[i] < 0f)
 				{
 					closedAt[i] = Time.time;
 				}
-				if ((Object)(object)val.m_CurrentAttachedGO != (Object)null)
+				if (hand.m_CurrentAttachedGO != null)
 				{
-					Release(val);
+					Release(hand);
 				}
-				else if (!Holding(val) && Time.time - closedAt[i] > Tuning.F("wallgrab.wait", 0.08f) && Time.time - closedAt[i] < 0.6f)
+				else if (!Holding(hand) && Time.time - closedAt[i] > Tuning.F("wallgrab.wait", 0.08f) && Time.time - closedAt[i] < 0.6f)
 				{
-					Take(val, players: true);
+					Take(hand, players: true);
 				}
 			}
 			List<IntPtr> list = null;
 			foreach (KeyValuePair<IntPtr, Held> item in held)
 			{
-				if ((Object)(object)item.Value.hand == (Object)null || (Object)(object)item.Value.joint == (Object)null)
+				if (item.Value.hand == null || item.Value.joint == null)
 				{
 					(list ?? (list = new List<IntPtr>())).Add(item.Key);
 				}
@@ -106,7 +105,7 @@ public static class WallGrab
 
 	public static bool Hold(Hand hand, bool on)
 	{
-		if ((Object)(object)hand == (Object)null)
+		if (hand == null)
 		{
 			return false;
 		}
@@ -125,42 +124,41 @@ public static class WallGrab
 	private static bool Take(Hand hand, bool players)
 	{
 		Rigidbody rb = hand.rb;
-		if ((Object)(object)rb == (Object)null)
+		if (rb == null)
 		{
 			return false;
 		}
-		Vector3 val = (((Object)(object)hand.palmPositionTransform != (Object)null) ? hand.palmPositionTransform.position : ((Component)hand).transform.position);
-		float num = Tuning.F("wallgrab.reach", 0.1f);
+		Vector3 vector = ((hand.palmPositionTransform != null) ? hand.palmPositionTransform.position : hand.transform.position);
+		float radius = Tuning.F("wallgrab.reach", 0.1f);
 		bool flag = false;
-		float num2 = float.MaxValue;
-		foreach (Collider item in Physics.OverlapSphere(val, num, -1, (QueryTriggerInteraction)1))
+		float num = float.MaxValue;
+		foreach (Collider item in Physics.OverlapSphere(vector, radius, -1, QueryTriggerInteraction.Ignore))
 		{
-			if ((Object)(object)item == (Object)null || (Object)(object)((Component)item).GetComponentInParent<RigManager>() != (Object)null)
+			if (item == null || item.GetComponentInParent<RigManager>() != null)
 			{
 				continue;
 			}
 			Rigidbody attachedRigidbody = item.attachedRigidbody;
-			if ((Object)(object)attachedRigidbody != (Object)null && !attachedRigidbody.isKinematic)
+			if (attachedRigidbody != null && !attachedRigidbody.isKinematic)
 			{
 				continue;
 			}
-			Vector3 val2 = val;
+			Vector3 vector2 = vector;
 			try
 			{
-				MeshCollider val3 = ((Il2CppObjectBase)(object)item).TryCast<MeshCollider>();
-				if ((Object)(object)val3 == (Object)null || val3.convex)
+				MeshCollider meshCollider = item.TryCast<MeshCollider>();
+				if (meshCollider == null || meshCollider.convex)
 				{
-					val2 = item.ClosestPoint(val);
+					vector2 = item.ClosestPoint(vector);
 				}
 			}
 			catch (Exception)
 			{
 			}
-			Vector3 val4 = val2 - val;
-			float magnitude = ((Vector3)(ref val4)).magnitude;
-			if (magnitude < num2)
+			float magnitude = (vector2 - vector).magnitude;
+			if (magnitude < num)
 			{
-				num2 = magnitude;
+				num = magnitude;
 				flag = true;
 			}
 		}
@@ -168,29 +166,27 @@ public static class WallGrab
 		{
 			return false;
 		}
-		ConfigurableJoint val5 = ((Component)rb).gameObject.AddComponent<ConfigurableJoint>();
-		((Joint)val5).autoConfigureConnectedAnchor = false;
-		((Joint)val5).anchor = ((Component)rb).transform.InverseTransformPoint(val);
-		((Joint)val5).connectedAnchor = val;
-		ConfigurableJointMotion val6 = (ConfigurableJointMotion)0;
-		val5.zMotion = (ConfigurableJointMotion)0;
-		ConfigurableJointMotion xMotion = (val5.yMotion = val6);
-		val5.xMotion = xMotion;
-		val6 = (ConfigurableJointMotion)2;
-		val5.angularZMotion = (ConfigurableJointMotion)2;
-		xMotion = (val5.angularYMotion = val6);
-		val5.angularXMotion = xMotion;
-		((Joint)val5).breakForce = float.PositiveInfinity;
-		((Joint)val5).breakTorque = float.PositiveInfinity;
-		held[((Il2CppObjectBase)(object)hand).Pointer] = new Held
+		ConfigurableJoint configurableJoint = rb.gameObject.AddComponent<ConfigurableJoint>();
+		configurableJoint.autoConfigureConnectedAnchor = false;
+		configurableJoint.anchor = rb.transform.InverseTransformPoint(vector);
+		configurableJoint.connectedAnchor = vector;
+		ConfigurableJointMotion configurableJointMotion2 = (configurableJoint.zMotion = ConfigurableJointMotion.Locked);
+		ConfigurableJointMotion xMotion = (configurableJoint.yMotion = configurableJointMotion2);
+		configurableJoint.xMotion = xMotion;
+		configurableJointMotion2 = (configurableJoint.angularZMotion = ConfigurableJointMotion.Free);
+		xMotion = (configurableJoint.angularYMotion = configurableJointMotion2);
+		configurableJoint.angularXMotion = xMotion;
+		configurableJoint.breakForce = float.PositiveInfinity;
+		configurableJoint.breakTorque = float.PositiveInfinity;
+		held[hand.Pointer] = new Held
 		{
 			hand = hand,
-			joint = val5,
+			joint = configurableJoint,
 			players = players
 		};
 		if (players)
 		{
-			Lessons.OnWall((!((Object)(object)hand == (Object)(object)Player.LeftHand)) ? 1 : 0, on: true);
+			Lessons.OnWall((!(hand == Player.LeftHand)) ? 1 : 0, on: true);
 		}
 		if (players && Time.time - saidAt > 5f)
 		{
@@ -202,16 +198,16 @@ public static class WallGrab
 
 	private static void Release(Hand hand)
 	{
-		if (!((Object)(object)hand == (Object)null) && held.TryGetValue(((Il2CppObjectBase)(object)hand).Pointer, out var value))
+		if (!(hand == null) && held.TryGetValue(hand.Pointer, out var value))
 		{
-			held.Remove(((Il2CppObjectBase)(object)hand).Pointer);
-			if ((Object)(object)value.joint != (Object)null)
+			held.Remove(hand.Pointer);
+			if (value.joint != null)
 			{
-				Object.Destroy((Object)(object)value.joint);
+				UnityEngine.Object.Destroy(value.joint);
 			}
 			if (value.players)
 			{
-				Lessons.OnWall((!((Object)(object)hand == (Object)(object)Player.LeftHand)) ? 1 : 0, on: false);
+				Lessons.OnWall((!(hand == Player.LeftHand)) ? 1 : 0, on: false);
 			}
 		}
 	}
@@ -220,9 +216,9 @@ public static class WallGrab
 	{
 		foreach (Held value in held.Values)
 		{
-			if ((Object)(object)value.joint != (Object)null)
+			if (value.joint != null)
 			{
-				Object.Destroy((Object)(object)value.joint);
+				UnityEngine.Object.Destroy(value.joint);
 			}
 		}
 		held.Clear();

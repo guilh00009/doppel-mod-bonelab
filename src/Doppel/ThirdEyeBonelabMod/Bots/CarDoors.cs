@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Il2CppInterop.Runtime.InteropTypes;
 using Il2CppSLZ.Marrow;
 using Il2CppSLZ.Marrow.Pool;
 using UnityEngine;
@@ -22,16 +21,16 @@ public static class CarDoors
 		sweptAt = Time.time;
 		List<Rigidbody> list = new List<Rigidbody>();
 		HashSet<IntPtr> hashSet = new HashSet<IntPtr>();
-		foreach (Seat item in Object.FindObjectsOfType<Seat>())
+		foreach (Seat item in UnityEngine.Object.FindObjectsOfType<Seat>())
 		{
-			Poolee val = (((Object)(object)item != (Object)null) ? ((Component)item).GetComponentInParent<Poolee>() : null);
-			if ((Object)(object)val == (Object)null || !hashSet.Add(((Il2CppObjectBase)(object)val).Pointer))
+			Poolee poolee = ((item != null) ? item.GetComponentInParent<Poolee>() : null);
+			if (poolee == null || !hashSet.Add(poolee.Pointer))
 			{
 				continue;
 			}
-			foreach (Rigidbody componentsInChild in ((Component)val).GetComponentsInChildren<Rigidbody>(true))
+			foreach (Rigidbody componentsInChild in poolee.GetComponentsInChildren<Rigidbody>(includeInactive: true))
 			{
-				if ((Object)(object)componentsInChild != (Object)null && ((Object)componentsInChild).name.IndexOf("door", StringComparison.OrdinalIgnoreCase) >= 0)
+				if (componentsInChild != null && componentsInChild.name.IndexOf("door", StringComparison.OrdinalIgnoreCase) >= 0)
 				{
 					list.Add(componentsInChild);
 				}
@@ -44,34 +43,34 @@ public static class CarDoors
 		int num = 0;
 		foreach (Bot item2 in BotManager.All)
 		{
-			PhysicsRig val2 = (((Object)(object)item2.rig != (Object)null) ? item2.rig.physicsRig : null);
-			if ((Object)(object)val2 == (Object)null)
+			PhysicsRig physicsRig = ((item2.rig != null) ? item2.rig.physicsRig : null);
+			if (physicsRig == null)
 			{
 				continue;
 			}
 			Collider[] array = null;
 			foreach (Rigidbody item3 in list)
 			{
-				if (!done.Add((((Il2CppObjectBase)(object)item2.rig).Pointer, ((Il2CppObjectBase)(object)item3).Pointer)))
+				if (!done.Add((item2.rig.Pointer, item3.Pointer)))
 				{
 					continue;
 				}
 				if (array == null)
 				{
-					array = ((Component)val2).GetComponentsInChildren<Collider>(true);
+					array = physicsRig.GetComponentsInChildren<Collider>(includeInactive: true);
 				}
-				foreach (Collider componentsInChild2 in ((Component)item3).GetComponentsInChildren<Collider>(true))
+				foreach (Collider componentsInChild2 in item3.GetComponentsInChildren<Collider>(includeInactive: true))
 				{
-					if ((Object)(object)componentsInChild2 == (Object)null || componentsInChild2.isTrigger || (Object)(object)componentsInChild2.attachedRigidbody != (Object)(object)item3)
+					if (componentsInChild2 == null || componentsInChild2.isTrigger || componentsInChild2.attachedRigidbody != item3)
 					{
 						continue;
 					}
 					Collider[] array2 = array;
-					foreach (Collider val3 in array2)
+					foreach (Collider collider in array2)
 					{
-						if ((Object)(object)val3 != (Object)null && !val3.isTrigger)
+						if (collider != null && !collider.isTrigger)
 						{
-							Physics.IgnoreCollision(componentsInChild2, val3, true);
+							Physics.IgnoreCollision(componentsInChild2, collider, ignore: true);
 						}
 					}
 				}

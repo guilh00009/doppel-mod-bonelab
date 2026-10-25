@@ -153,11 +153,11 @@ public class Practice
 		{
 			trial = (float[])best.Clone();
 			List<string> list = new List<string>();
-			int num = ((Random.value < 0.5f) ? 1 : 2);
+			int num = ((UnityEngine.Random.value < 0.5f) ? 1 : 2);
 			for (int i = 0; i < num; i++)
 			{
-				int num2 = Random.Range(0, names.Length);
-				float num3 = Random.Range(0.08f, 0.22f) * ((Random.value < 0.5f) ? (-1f) : 1f);
+				int num2 = UnityEngine.Random.Range(0, names.Length);
+				float num3 = UnityEngine.Random.Range(0.08f, 0.22f) * ((UnityEngine.Random.value < 0.5f) ? (-1f) : 1f);
 				float num4 = trial[num2];
 				trial[num2] = Mathf.Clamp(trial[num2] * (1f + num3), least[num2], most[num2]);
 				if (Mathf.Abs(trial[num2] - num4) > 0.001f)

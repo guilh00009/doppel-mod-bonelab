@@ -115,9 +115,7 @@ public static class HoldLibrary
 				return false;
 			}
 		}
-		Vector3 position = new Vector3(array2[0], array2[1], array2[2]);
-		Quaternion val = new Quaternion(array2[3], array2[4], array2[5], array2[6]);
-		p = new Bot.Pose(position, ((Quaternion)(ref val)).normalized);
+		p = new Bot.Pose(new Vector3(array2[0], array2[1], array2[2]), new Quaternion(array2[3], array2[4], array2[5], array2[6]).normalized);
 		return true;
 	}
 }

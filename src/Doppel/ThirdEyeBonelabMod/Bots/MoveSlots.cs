@@ -7,12 +7,10 @@ using BoneLib;
 using BoneLib.BoneMenu;
 using Il2CppSLZ.Marrow;
 using Il2CppSLZ.Marrow.Pool;
-using Il2CppSLZ.Marrow.Warehouse;
 using Il2CppSLZ.VRMK;
 using Il2CppTMPro;
 using MelonLoader;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace ThirdEyeBonelabMod.Bots;
 
@@ -199,7 +197,7 @@ public static class MoveSlots
 
 	private static Page movesPage;
 
-	private static readonly Page[] kindPages = (Page[])(object)new Page[32];
+	private static readonly Page[] kindPages = new Page[32];
 
 	private static string Root => AssetFiles.SaveFolder("moves");
 
@@ -386,18 +384,18 @@ public static class MoveSlots
 		try
 		{
 			RigManager rigManager = Player.RigManager;
-			if (!((Object)(object)rigManager == (Object)null))
+			if (!(rigManager == null))
 			{
 				string text = BotRig.AvatarOf(rigManager);
 				if (!string.IsNullOrEmpty(text))
 				{
 					code = text;
 				}
-				Avatar avatar = rigManager.avatar;
-				if ((Object)(object)avatar != (Object)null)
+				Il2CppSLZ.VRMK.Avatar avatar = rigManager.avatar;
+				if (avatar != null)
 				{
-					name = ((Object)avatar).name.Replace("(Clone)", "").Trim();
-					eyes = avatar.eyeHeight * ((Component)avatar).transform.lossyScale.y;
+					name = avatar.name.Replace("(Clone)", "").Trim();
+					eyes = avatar.eyeHeight * avatar.transform.lossyScale.y;
 				}
 			}
 		}
@@ -592,7 +590,7 @@ public static class MoveSlots
 			return null;
 		}
 		List<Frame[]> list3 = ((list2.Count > 0) ? list2 : list);
-		return list3[Random.Range(0, list3.Count)];
+		return list3[UnityEngine.Random.Range(0, list3.Count)];
 	}
 
 	public static Frame[] Pick(Kind kind, List<Frame[]> lately, string avatar)
@@ -765,8 +763,8 @@ public static class MoveSlots
 
 	private static bool Down(OpenControllerRig controls, Button button)
 	{
-		BaseController leftController = ((ControllerRig)controls).leftController;
-		BaseController rightController = ((ControllerRig)controls).rightController;
+		BaseController leftController = controls.leftController;
+		BaseController rightController = controls.rightController;
 		return button switch
 		{
 			Button.LeftStickClick => leftController._thumbstick, 
@@ -815,7 +813,7 @@ public static class MoveSlots
 	public static void Update()
 	{
 		OpenControllerRig controllerRig = Player.ControllerRig;
-		if ((Object)(object)controllerRig == (Object)null || (Object)(object)((ControllerRig)controllerRig).leftController == (Object)null || (Object)(object)((ControllerRig)controllerRig).rightController == (Object)null)
+		if (controllerRig == null || controllerRig.leftController == null || controllerRig.rightController == null)
 		{
 			return;
 		}
@@ -995,9 +993,7 @@ public static class MoveSlots
 				}
 				if (i > 0)
 				{
-					float num3 = num2;
-					Vector2 val = new Vector2(value.headWorld.x - list[i - 1].headWorld.x, value.headWorld.z - list[i - 1].headWorld.z);
-					num2 = num3 + ((Vector2)(ref val)).magnitude;
+					num2 += new Vector2(value.headWorld.x - list[i - 1].headWorld.x, value.headWorld.z - list[i - 1].headWorld.z).magnitude;
 				}
 				list[i] = value;
 			}
@@ -1056,7 +1052,7 @@ public static class MoveSlots
 		}
 		string text2 = Names[armedKind] + " " + (armedSlot + 1) + " saved: " + Describe(kind, slot);
 		Lab.Event("moves: " + text2);
-		int num4 = armedSlot;
+		int num3 = armedSlot;
 		if (slot.clip != null)
 		{
 			BotManager.Preview(slot.clip);
@@ -1064,11 +1060,11 @@ public static class MoveSlots
 		int count = Slots[armedKind].Count;
 		for (int j = 1; j <= count; j++)
 		{
-			int num5 = (num4 + j) % count;
-			if (!Slots[armedKind][num5].filled)
+			int num4 = (num3 + j) % count;
+			if (!Slots[armedKind][num4].filled)
 			{
-				armedSlot = num5;
-				text2 = text2 + ". Next: slot " + (num5 + 1);
+				armedSlot = num4;
+				text2 = text2 + ". Next: slot " + (num4 + 1);
 				break;
 			}
 		}
@@ -1130,16 +1126,9 @@ public static class MoveSlots
 			}
 			if (moving)
 			{
-				Vector2 val = new Vector2(frames[index2].headWorld.x - frames[index].headWorld.x, frames[index2].headWorld.z - frames[index].headWorld.z);
-				return ((Vector2)(ref val)).magnitude / num4 > need;
+				return new Vector2(frames[index2].headWorld.x - frames[index].headWorld.x, frames[index2].headWorld.z - frames[index].headWorld.z).magnitude / num4 > need;
 			}
-			float[] array = new float[3];
-			Vector3 val2 = frames[index2].leftPos - frames[index].leftPos;
-			array[0] = ((Vector3)(ref val2)).magnitude;
-			val2 = frames[index2].rightPos - frames[index].rightPos;
-			array[1] = ((Vector3)(ref val2)).magnitude;
-			array[2] = Mathf.Abs(frames[index2].height - frames[index].height);
-			return Mathf.Max(array) / num4 > need;
+			return Mathf.Max((frames[index2].leftPos - frames[index].leftPos).magnitude, (frames[index2].rightPos - frames[index].rightPos).magnitude, Mathf.Abs(frames[index2].height - frames[index].height)) / num4 > need;
 		}
 	}
 
@@ -1168,41 +1157,41 @@ public static class MoveSlots
 			text = hudNote;
 		}
 		Transform head = Player.Head;
-		if (text == null || (Object)(object)head == (Object)null)
+		if (text == null || head == null)
 		{
-			if ((Object)(object)hud != (Object)null)
+			if (hud != null)
 			{
-				((Component)hud).gameObject.SetActive(false);
+				hud.gameObject.SetActive(value: false);
 			}
 			return;
 		}
 		try
 		{
-			if ((Object)(object)hud == (Object)null)
+			if (hud == null)
 			{
-				GameObject val = GameObject.Find("ThirdEyeMovesHud");
-				if ((Object)(object)val != (Object)null)
+				GameObject gameObject = GameObject.Find("ThirdEyeMovesHud");
+				if (gameObject != null)
 				{
-					Object.Destroy((Object)(object)val);
+					UnityEngine.Object.Destroy(gameObject);
 				}
 				hud = new GameObject("ThirdEyeMovesHud").AddComponent<TextMeshPro>();
 				foreach (TMP_FontAsset item in Resources.FindObjectsOfTypeAll<TMP_FontAsset>())
 				{
-					if ((Object)(object)item != (Object)null)
+					if (item != null)
 					{
-						((TMP_Text)hud).font = item;
+						hud.font = item;
 						break;
 					}
 				}
-				((TMP_Text)hud).fontSize = 0.45f;
-				((TMP_Text)hud).rectTransform.sizeDelta = new Vector2(2f, 0.8f);
-				((TMP_Text)hud).alignment = (TextAlignmentOptions)514;
-				((TMP_Text)hud).enableWordWrapping = false;
-				((TMP_Text)hud).richText = true;
-				((Graphic)hud).color = Color.white;
+				hud.fontSize = 0.45f;
+				hud.rectTransform.sizeDelta = new Vector2(2f, 0.8f);
+				hud.alignment = TextAlignmentOptions.Center;
+				hud.enableWordWrapping = false;
+				hud.richText = true;
+				hud.color = Color.white;
 			}
-			((Component)hud).gameObject.SetActive(true);
-			((TMP_Text)hud).text = text;
+			hud.gameObject.SetActive(value: true);
+			hud.text = text;
 			Transform transform = hud.transform;
 			transform.position = head.position + head.forward * 0.75f - head.up * num;
 			transform.rotation = Quaternion.LookRotation(head.forward, head.up);
@@ -1216,9 +1205,9 @@ public static class MoveSlots
 	{
 		try
 		{
-			if ((Object)(object)hud != (Object)null)
+			if (hud != null)
 			{
-				Object.Destroy((Object)(object)((Component)hud).gameObject);
+				UnityEngine.Object.Destroy(hud.gameObject);
 			}
 		}
 		catch (Exception)
@@ -1233,20 +1222,10 @@ public static class MoveSlots
 		for (int i = 1; i < clip.Length; i++)
 		{
 			float num = clip[i].time - clip[i - 1].time;
-			if (num <= 0f)
+			if (!(num <= 0f) && ((clip[i].leftPos - clip[i - 1].leftPos).magnitude / num > 9f || (clip[i].rightPos - clip[i - 1].rightPos).magnitude / num > 9f || Mathf.Abs(clip[i].height - clip[i - 1].height) / num > 5f))
 			{
-				continue;
+				return true;
 			}
-			Vector3 val = clip[i].leftPos - clip[i - 1].leftPos;
-			if (!(((Vector3)(ref val)).magnitude / num > 9f))
-			{
-				val = clip[i].rightPos - clip[i - 1].rightPos;
-				if (!(((Vector3)(ref val)).magnitude / num > 9f) && !(Mathf.Abs(clip[i].height - clip[i - 1].height) / num > 5f))
-				{
-					continue;
-				}
-			}
-			return true;
 		}
 		return false;
 	}
@@ -1256,12 +1235,12 @@ public static class MoveSlots
 		barcode = (name = "");
 		try
 		{
-			Gun val = Player.GetComponentInHand<Gun>(Player.RightHand) ?? Player.GetComponentInHand<Gun>(Player.LeftHand);
-			Poolee val2 = (((Object)(object)val != (Object)null) ? ((Component)val).GetComponentInParent<Poolee>() : null);
-			if (!((Object)(object)val2 == (Object)null) && !((Object)(object)val2.SpawnableCrate == (Object)null))
+			Gun gun = Player.GetComponentInHand<Gun>(Player.RightHand) ?? Player.GetComponentInHand<Gun>(Player.LeftHand);
+			Poolee poolee = ((gun != null) ? gun.GetComponentInParent<Poolee>() : null);
+			if (!(poolee == null) && !(poolee.SpawnableCrate == null))
 			{
-				barcode = ((Scannable)val2.SpawnableCrate).Barcode.ID;
-				name = Lessons.NameOf(val2);
+				barcode = poolee.SpawnableCrate.Barcode.ID;
+				name = Lessons.NameOf(poolee);
 			}
 		}
 		catch (Exception)
@@ -1418,41 +1397,41 @@ public static class MoveSlots
 
 	public static void BuildMenu(Page page)
 	{
-		movesPage = page.CreatePage("Moves (record in slots)", Color.green, 0, true);
-		movesPage.CreateFunction("Whose moves are these?", Color.cyan, (Action)delegate
+		movesPage = page.CreatePage("Moves (record in slots)", Color.green);
+		movesPage.CreateFunction("Whose moves are these?", Color.cyan, delegate
 		{
 			Spawnables.Notify("Each avatar has its own moves. " + Summary() + ". An avatar with none of a kind borrows another's, sized to it.");
 		});
 		ReadKeys();
-		Page obj = movesPage.CreatePage("Record shortcut (buttons)", Color.yellow, 0, true);
-		obj.CreateFunction("What is it now?", Color.cyan, (Action)delegate
+		Page page2 = movesPage.CreatePage("Record shortcut (buttons)", Color.yellow);
+		page2.CreateFunction("What is it now?", Color.cyan, delegate
 		{
 			Spawnables.Notify("To start and stop recording a move: " + HowToSignal() + ".");
 		});
-		obj.CreateEnum("Button 1", Color.white, (Enum)firstButton, (Action<Enum>)delegate(Enum v)
+		page2.CreateEnum("Button 1", Color.white, firstButton, delegate(Enum v)
 		{
 			firstButton = (((Button)(object)v != Button.None) ? ((Button)(object)v) : Button.LeftStickClick);
 			SaveKeys();
 			Spawnables.Notify("Record shortcut: " + HowToSignal());
 		});
-		obj.CreateEnum("Button 2 (None = one button only)", Color.white, (Enum)secondButton, (Action<Enum>)delegate(Enum v)
+		page2.CreateEnum("Button 2 (None = one button only)", Color.white, secondButton, delegate(Enum v)
 		{
 			secondButton = (Button)(object)v;
 			SaveKeys();
 			Spawnables.Notify("Record shortcut: " + HowToSignal());
 		});
-		obj.CreateEnum("Hold, or press twice", Color.white, (Enum)pressKind, (Action<Enum>)delegate(Enum v)
+		page2.CreateEnum("Hold, or press twice", Color.white, pressKind, delegate(Enum v)
 		{
 			pressKind = (Press)(object)v;
 			SaveKeys();
 			Spawnables.Notify("Record shortcut: " + HowToSignal());
 		});
-		obj.CreateFloat("Hold for (seconds)", Color.white, holdFor, 0.1f, 0.2f, 3f, (Action<float>)delegate(float v)
+		page2.CreateFloat("Hold for (seconds)", Color.white, holdFor, 0.1f, 0.2f, 3f, delegate(float v)
 		{
 			holdFor = v;
 			SaveKeys();
 		});
-		obj.CreateFunction("Back to both sticks, held", Color.red, (Action)delegate
+		page2.CreateFunction("Back to both sticks, held", Color.red, delegate
 		{
 			firstButton = Button.LeftStickClick;
 			secondButton = Button.RightStickClick;
@@ -1463,7 +1442,7 @@ public static class MoveSlots
 		});
 		for (int i = 0; i < Names.Length; i++)
 		{
-			kindPages[i] = movesPage.CreatePage(Names[i], Color.white, 0, true);
+			kindPages[i] = movesPage.CreatePage(Names[i], Color.white);
 		}
 		Menu();
 	}
@@ -1478,18 +1457,18 @@ public static class MoveSlots
 		{
 			for (int i = 0; i < Names.Length; i++)
 			{
-				Page val = kindPages[i];
-				if (val == null)
+				Page page = kindPages[i];
+				if (page == null)
 				{
 					continue;
 				}
-				val.RemoveAll();
+				page.RemoveAll();
 				int kind = i;
 				for (int j = 0; j < Slots[kind].Count; j++)
 				{
 					int index = j;
 					bool flag = armedKind == kind && armedSlot == index;
-					val.CreateFunction((flag ? "> " : "") + "Slot " + (j + 1) + ": " + Describe((Kind)kind, Slots[kind][j]), flag ? Color.green : (Slots[kind][j].filled ? Color.white : Color.gray), (Action)delegate
+					page.CreateFunction((flag ? "> " : "") + "Slot " + (j + 1) + ": " + Describe((Kind)kind, Slots[kind][j]), flag ? Color.green : (Slots[kind][j].filled ? Color.white : Color.gray), delegate
 					{
 						armedKind = kind;
 						armedSlot = index;
@@ -1497,7 +1476,7 @@ public static class MoveSlots
 						Menu();
 					});
 				}
-				val.CreateFunction("Show the picked slot on a bot", Color.yellow, (Action)delegate
+				page.CreateFunction("Show the picked slot on a bot", Color.yellow, delegate
 				{
 					Slot slot = ((armedKind == kind) ? Slots[kind][armedSlot] : null);
 					if (slot == null || slot.clip == null)
@@ -1509,7 +1488,7 @@ public static class MoveSlots
 						BotManager.Preview(slot.clip);
 					}
 				});
-				val.CreateFunction("Clear the picked slot", Color.red, (Action)delegate
+				page.CreateFunction("Clear the picked slot", Color.red, delegate
 				{
 					if (armedKind == kind)
 					{
@@ -1520,11 +1499,11 @@ public static class MoveSlots
 						Spawnables.Notify("Pick a slot of this kind first");
 					}
 				});
-				val.CreateFunction("Add a slot", Color.cyan, (Action)delegate
+				page.CreateFunction("Add a slot", Color.cyan, delegate
 				{
 					Add((Kind)kind);
 				});
-				val.CreateFunction("Remove the picked slot", Color.red, (Action)delegate
+				page.CreateFunction("Remove the picked slot", Color.red, delegate
 				{
 					if (armedKind == kind)
 					{

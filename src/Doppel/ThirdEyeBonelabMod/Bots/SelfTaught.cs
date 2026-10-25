@@ -291,7 +291,7 @@ public static class SelfTaught
 		list.Remove(not);
 		if (list.Count > 0)
 		{
-			return list[Random.Range(0, list.Count)];
+			return list[UnityEngine.Random.Range(0, list.Count)];
 		}
 		string result = Actions[0];
 		float num2 = float.MinValue;
@@ -301,7 +301,7 @@ public static class SelfTaught
 			if (!(text2 == not))
 			{
 				Trial trial = item.actions[text2];
-				float num3 = trial.effect + Tuning.F("curious.explore", 0.35f) * Mathf.Sqrt(Mathf.Log((float)num) / (float)trial.tries) + Random.value * 0.1f;
+				float num3 = trial.effect + Tuning.F("curious.explore", 0.35f) * Mathf.Sqrt(Mathf.Log(num) / (float)trial.tries) + UnityEngine.Random.value * 0.1f;
 				if (num3 > num2)
 				{
 					num2 = num3;
@@ -379,9 +379,9 @@ public static class SelfTaught
 		float num = ((@throw.miss < 0f) ? (miss * 1.2f) : @throw.miss);
 		if (miss < num)
 		{
-			float num2 = Mathf.Clamp01(0.3f + 0.5f * (num - miss) / Mathf.Max(num, 0.5f));
-			@throw.speed = Mathf.Lerp(@throw.speed, speed, num2);
-			@throw.loft = Mathf.Lerp(@throw.loft, loft, num2);
+			float t = Mathf.Clamp01(0.3f + 0.5f * (num - miss) / Mathf.Max(num, 0.5f));
+			@throw.speed = Mathf.Lerp(@throw.speed, speed, t);
+			@throw.loft = Mathf.Lerp(@throw.loft, loft, t);
 			@throw.spread = Mathf.Max(0.12f, @throw.spread * 0.88f);
 		}
 		else
@@ -400,8 +400,8 @@ public static class SelfTaught
 
 	private static float Gauss()
 	{
-		float num = Mathf.Max(1E-05f, Random.value);
-		return Mathf.Sqrt(-2f * Mathf.Log(num)) * Mathf.Cos((float)Math.PI * 2f * Random.value);
+		float f = Mathf.Max(1E-05f, UnityEngine.Random.value);
+		return Mathf.Sqrt(-2f * Mathf.Log(f)) * Mathf.Cos((float)Math.PI * 2f * UnityEngine.Random.value);
 	}
 
 	private static string Cell(Vector3 p)
@@ -449,8 +449,7 @@ public static class SelfTaught
 		here.climbFails.Remove(Cell(at));
 		foreach (float[] top in here.tops)
 		{
-			Vector3 val = new Vector3(top[0], top[1], top[2]) - at;
-			if (((Vector3)(ref val)).magnitude < 3f)
+			if ((new Vector3(top[0], top[1], top[2]) - at).magnitude < 3f)
 			{
 				return;
 			}
@@ -467,22 +466,20 @@ public static class SelfTaught
 	{
 		top = default(Vector3);
 		List<Vector3> list = new List<Vector3>();
-		Vector3 val = default(Vector3);
 		foreach (float[] top2 in Here.tops)
 		{
-			((Vector3)(ref val))._002Ector(top2[0], top2[1], top2[2]);
-			Vector3 val2 = val - from;
-			float magnitude = ((Vector3)(ref val2)).magnitude;
+			Vector3 vector = new Vector3(top2[0], top2[1], top2[2]);
+			float magnitude = (vector - from).magnitude;
 			if (magnitude > 6f && magnitude < within)
 			{
-				list.Add(val);
+				list.Add(vector);
 			}
 		}
 		if (list.Count == 0)
 		{
 			return false;
 		}
-		top = list[Random.Range(0, list.Count)];
+		top = list[UnityEngine.Random.Range(0, list.Count)];
 		return true;
 	}
 

@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using BoneLib;
-using Il2CppInterop.Runtime.InteropTypes;
 using Il2CppSLZ.Marrow;
 using Il2CppSLZ.Marrow.Pool;
 using Il2CppSLZ.Marrow.SceneStreaming;
-using Il2CppSLZ.Marrow.Warehouse;
 using MelonLoader;
 using UnityEngine;
 
@@ -85,7 +83,7 @@ public static class Lessons
 		{
 			try
 			{
-				return ((Scannable)SceneStreamer.Session.Level).Barcode.ID;
+				return SceneStreamer.Session.Level.Barcode.ID;
 			}
 			catch (Exception)
 			{
@@ -155,7 +153,7 @@ public static class Lessons
 		{
 			return null;
 		}
-		return list[(Random.value < 0.7f) ? (list.Count - 1) : Random.Range(0, list.Count)];
+		return list[(UnityEngine.Random.value < 0.7f) ? (list.Count - 1) : UnityEngine.Random.Range(0, list.Count)];
 	}
 
 	public static Lesson With(string barcode)
@@ -233,7 +231,7 @@ public static class Lessons
 		{
 			return null;
 		}
-		return list[(Random.value < 0.6f) ? (list.Count - 1) : Random.Range(0, list.Count)];
+		return list[(UnityEngine.Random.value < 0.6f) ? (list.Count - 1) : UnityEngine.Random.Range(0, list.Count)];
 	}
 
 	public static string DriveSaid()
@@ -277,8 +275,7 @@ public static class Lessons
 		for (int i = 1; i < frames.Count; i++)
 		{
 			num = Mathf.Max(num, frames[i].pelvis.y);
-			Vector3 val = frames[i].pelvis - frames[i - 1].pelvis;
-			if (((Vector3)(ref val)).magnitude > 1.5f)
+			if ((frames[i].pelvis - frames[i - 1].pelvis).magnitude > 1.5f)
 			{
 				num2++;
 			}
@@ -343,14 +340,11 @@ public static class Lessons
 
 	private static float Apart(Clone.Frame a, Clone.Frame b)
 	{
-		Vector3 val = a.left.position - a.head.position;
-		Vector3 val2 = b.left.position - b.head.position;
-		Vector3 val3 = a.right.position - a.head.position;
-		Vector3 val4 = b.right.position - b.head.position;
-		Vector3 val5 = val - val2;
-		float magnitude = ((Vector3)(ref val5)).magnitude;
-		val5 = val3 - val4;
-		return magnitude + ((Vector3)(ref val5)).magnitude + 0.25f * Mathf.Abs(a.leftIn.grip - b.leftIn.grip) + 0.25f * Mathf.Abs(a.rightIn.grip - b.rightIn.grip) + 0.15f * ((a.leftIn.primary != b.leftIn.primary) ? 1f : 0f) + 0.15f * ((a.rightIn.primary != b.rightIn.primary) ? 1f : 0f);
+		Vector3 vector = a.left.position - a.head.position;
+		Vector3 vector2 = b.left.position - b.head.position;
+		Vector3 vector3 = a.right.position - a.head.position;
+		Vector3 vector4 = b.right.position - b.head.position;
+		return (vector - vector2).magnitude + (vector3 - vector4).magnitude + 0.25f * Mathf.Abs(a.leftIn.grip - b.leftIn.grip) + 0.25f * Mathf.Abs(a.rightIn.grip - b.rightIn.grip) + 0.15f * ((a.leftIn.primary != b.leftIn.primary) ? 1f : 0f) + 0.15f * ((a.rightIn.primary != b.rightIn.primary) ? 1f : 0f);
 	}
 
 	private static void ReadInfo(Lesson l)
@@ -397,22 +391,17 @@ public static class Lessons
 		about.Clear();
 		harmed = 0;
 		Transform head = Player.Head;
-		if ((Object)(object)head == (Object)null)
+		if (head == null)
 		{
 			return;
 		}
 		HashSet<IntPtr> hashSet = new HashSet<IntPtr>();
-		foreach (Collider item in Physics.OverlapSphere(head.position, 12f, -1, (QueryTriggerInteraction)1))
+		foreach (Collider item in Physics.OverlapSphere(head.position, 12f, -1, QueryTriggerInteraction.Ignore))
 		{
-			Rigidbody val = (((Object)(object)item != (Object)null) ? item.attachedRigidbody : null);
-			if ((Object)(object)val == (Object)null || val.isKinematic || !hashSet.Add(((Il2CppObjectBase)(object)val).Pointer) || (Object)(object)((Component)val).GetComponentInParent<RigManager>() != (Object)null)
+			Rigidbody rigidbody = ((item != null) ? item.attachedRigidbody : null);
+			if (!(rigidbody == null) && !rigidbody.isKinematic && hashSet.Add(rigidbody.Pointer) && !(rigidbody.GetComponentInParent<RigManager>() != null) && !(rigidbody.velocity.magnitude > 0.3f) && (!(watchedThing != null) || !rigidbody.transform.IsChildOf(watchedThing)))
 			{
-				continue;
-			}
-			Vector3 velocity = val.velocity;
-			if (!(((Vector3)(ref velocity)).magnitude > 0.3f) && (!((Object)(object)watchedThing != (Object)null) || !((Component)val).transform.IsChildOf(watchedThing)))
-			{
-				about.Add((val, val.worldCenterOfMass));
+				about.Add((rigidbody, rigidbody.worldCenterOfMass));
 				if (about.Count >= 40)
 				{
 					break;
@@ -480,14 +469,14 @@ public static class Lessons
 		{
 			list.Remove(notItem);
 		}
-		string thing = list[Random.Range(0, list.Count)];
+		string thing = list[UnityEngine.Random.Range(0, list.Count)];
 		List<Lesson> list2 = All.FindAll((Lesson l) => l.item == thing && l.purpose != "climb" && (l.purpose != "drive" || named != null));
 		float num = 0f;
 		for (int j = 0; j < list2.Count; j++)
 		{
 			num += 1f + ((list2.Count > 1) ? ((float)j / (float)(list2.Count - 1)) : 0f);
 		}
-		float num2 = Random.value * num;
+		float num2 = UnityEngine.Random.value * num;
 		for (int k = 0; k < list2.Count; k++)
 		{
 			num2 -= 1f + ((list2.Count > 1) ? ((float)k / (float)(list2.Count - 1)) : 0f);
@@ -501,7 +490,7 @@ public static class Lessons
 
 	public static void OnGrip(Grip grip, Hand hand, bool on)
 	{
-		if (!on || (Object)(object)grip == (Object)null || (Object)(object)hand == (Object)null || ((Object)(object)hand != (Object)(object)Player.LeftHand && (Object)(object)hand != (Object)(object)Player.RightHand))
+		if (!on || grip == null || hand == null || (hand != Player.LeftHand && hand != Player.RightHand))
 		{
 			return;
 		}
@@ -512,39 +501,39 @@ public static class Lessons
 		}
 		try
 		{
-			if ((Object)(object)((Component)grip).GetComponentInParent<RigManager>() != (Object)null)
+			if (grip.GetComponentInParent<RigManager>() != null)
 			{
 				return;
 			}
-			Poolee componentInParent = ((Component)grip).GetComponentInParent<Poolee>();
-			if ((Object)(object)componentInParent == (Object)null || (Object)(object)componentInParent.SpawnableCrate == (Object)null)
+			Poolee componentInParent = grip.GetComponentInParent<Poolee>();
+			if (componentInParent == null || componentInParent.SpawnableCrate == null)
 			{
 				return;
 			}
-			string iD = ((Scannable)componentInParent.SpawnableCrate).Barcode.ID;
-			string name = ((Object)((Component)componentInParent).gameObject).name;
+			string iD = componentInParent.SpawnableCrate.Barcode.ID;
+			string name = componentInParent.gameObject.name;
 			string text = name.ToUpperInvariant();
-			if (Clone.IsBody(iD, name) || text.Contains("SPAWN") || text.Contains("NIMBUS") || (Object)(object)((Component)componentInParent).GetComponent<Magazine>() != (Object)null)
+			if (Clone.IsBody(iD, name) || text.Contains("SPAWN") || text.Contains("NIMBUS") || componentInParent.GetComponent<Magazine>() != null)
 			{
 				return;
 			}
-			Gun componentInChildren = ((Component)componentInParent).GetComponentInChildren<Gun>();
-			if ((!((Object)(object)componentInChildren != (Object)null) || !((Object)(object)componentInChildren.defaultMagazine != (Object)null)) && !text.Contains("AMMO") && !iD.ToUpperInvariant().Contains("AMMO") && Clone.Begin(Clone.Lesson))
+			Gun componentInChildren = componentInParent.GetComponentInChildren<Gun>();
+			if ((!(componentInChildren != null) || !(componentInChildren.defaultMagazine != null)) && !text.Contains("AMMO") && !iD.ToUpperInvariant().Contains("AMMO") && Clone.Begin(Clone.Lesson))
 			{
 				Clone.Take taking = Clone.Lesson.taking;
 				taking.item = iD;
 				string text2 = null;
 				try
 				{
-					text2 = ((Scannable)componentInParent.SpawnableCrate).Title;
+					text2 = componentInParent.SpawnableCrate.Title;
 				}
 				catch (Exception)
 				{
 				}
 				taking.itemName = (string.IsNullOrEmpty(text2) ? Clean(name) : text2);
 				taking.level = Level;
-				watched = ((Il2CppObjectBase)(object)componentInParent).Pointer;
-				watchedThing = ((Component)componentInParent).transform;
+				watched = componentInParent.Pointer;
+				watchedThing = componentInParent.transform;
 				lastHeldAt = Time.time;
 				LookAbout();
 				Lab.Event("lesson: watching you with the " + taking.itemName);
@@ -561,7 +550,7 @@ public static class Lessons
 		string text = null;
 		try
 		{
-			text = ((Scannable)poolee.SpawnableCrate).Title;
+			text = poolee.SpawnableCrate.Title;
 		}
 		catch (Exception)
 		{
@@ -570,23 +559,23 @@ public static class Lessons
 		{
 			return text;
 		}
-		return Clean(((Object)((Component)poolee).gameObject).name);
+		return Clean(poolee.gameObject.name);
 	}
 
 	private static void NoteSeen(Grip grip)
 	{
 		try
 		{
-			if ((Object)(object)((Component)grip).GetComponentInParent<RigManager>() != (Object)null)
+			if (grip.GetComponentInParent<RigManager>() != null)
 			{
 				return;
 			}
-			Poolee componentInParent = ((Component)grip).GetComponentInParent<Poolee>();
-			if (!((Object)(object)componentInParent == (Object)null) && !((Object)(object)componentInParent.SpawnableCrate == (Object)null))
+			Poolee componentInParent = grip.GetComponentInParent<Poolee>();
+			if (!(componentInParent == null) && !(componentInParent.SpawnableCrate == null))
 			{
-				string iD = ((Scannable)componentInParent.SpawnableCrate).Barcode.ID;
-				string text = ((Object)((Component)componentInParent).gameObject).name.ToUpperInvariant();
-				if (!Clone.IsBody(iD, ((Object)((Component)componentInParent).gameObject).name) && !text.Contains("SPAWN") && !text.Contains("NIMBUS") && !((Object)(object)((Component)componentInParent).GetComponentInChildren<Gun>() != (Object)null) && !((Object)(object)((Component)componentInParent).GetComponentInChildren<Magazine>() != (Object)null))
+				string iD = componentInParent.SpawnableCrate.Barcode.ID;
+				string text = componentInParent.gameObject.name.ToUpperInvariant();
+				if (!Clone.IsBody(iD, componentInParent.gameObject.name) && !text.Contains("SPAWN") && !text.Contains("NIMBUS") && !(componentInParent.GetComponentInChildren<Gun>() != null) && !(componentInParent.GetComponentInChildren<Magazine>() != null))
 				{
 					SelfTaught.Seen(iD, NameOf(componentInParent));
 				}
@@ -642,7 +631,7 @@ public static class Lessons
 			}
 			return;
 		}
-		bool num = (Object)(object)watchedThing == (Object)null;
+		bool num = watchedThing == null;
 		if (!num && (Holds(Player.LeftHand) || Holds(Player.RightHand)))
 		{
 			lastHeldAt = Time.time;
@@ -686,10 +675,10 @@ public static class Lessons
 
 	private static bool Holds(Hand hand)
 	{
-		GameObject val = (((Object)(object)hand != (Object)null) ? hand.m_CurrentAttachedGO : null);
-		if ((Object)(object)val != (Object)null && (Object)(object)watchedThing != (Object)null)
+		GameObject gameObject = ((hand != null) ? hand.m_CurrentAttachedGO : null);
+		if (gameObject != null && watchedThing != null)
 		{
-			return val.transform.IsChildOf(watchedThing);
+			return gameObject.transform.IsChildOf(watchedThing);
 		}
 		return false;
 	}
@@ -714,7 +703,6 @@ public static class Lessons
 		take.events.RemoveAll((Clone.Event e) => e.t > until);
 		int num = 0;
 		float num2 = 0f;
-		Vector3 val;
 		for (int i = 1; i < take.frames.Count; i++)
 		{
 			Clone.Frame frame = take.frames[i - 1];
@@ -723,29 +711,24 @@ public static class Lessons
 			float num3 = frame2.t - frame.t;
 			if (num3 > 0f)
 			{
-				float[] obj = new float[3] { num2, 0f, 0f };
-				val = frame2.left.position - frame.left.position;
-				obj[1] = ((Vector3)(ref val)).magnitude / num3;
-				val = frame2.right.position - frame.right.position;
-				obj[2] = ((Vector3)(ref val)).magnitude / num3;
-				num2 = Mathf.Max(obj);
+				num2 = Mathf.Max(num2, (frame2.left.position - frame.left.position).magnitude / num3, (frame2.right.position - frame.right.position).magnitude / num3);
 			}
 		}
 		int count = take.events.FindAll((Clone.Event e) => e.kind == Clone.Kind.Fire).Count;
 		bool flag2 = take.events.Exists((Clone.Event e) => e.kind == Clone.Kind.Seat);
 		if (flag)
 		{
-			float num4 = float.MaxValue;
-			float num5 = float.MinValue;
+			float a = float.MaxValue;
+			float num4 = float.MinValue;
 			foreach (Clone.Frame frame3 in take.frames)
 			{
-				num4 = Mathf.Min(num4, frame3.pelvis.y);
-				num5 = Mathf.Max(num5, frame3.pelvis.y);
+				a = Mathf.Min(a, frame3.pelvis.y);
+				num4 = Mathf.Max(num4, frame3.pelvis.y);
 			}
-			flag2 = take.frames.Count > 30 && num5 - take.frames[0].pelvis.y > 1.2f;
+			flag2 = take.frames.Count > 30 && num4 - take.frames[0].pelvis.y > 1.2f;
 			if (!flag2)
 			{
-				Lab.Event("lesson: your hands on a wall, but not up it (" + ((take.frames.Count > 0) ? (num5 - take.frames[0].pelvis.y).ToString("0.0") : "0") + " m), not kept");
+				Lab.Event("lesson: your hands on a wall, but not up it (" + ((take.frames.Count > 0) ? (num4 - take.frames[0].pelvis.y).ToString("0.0") : "0") + " m), not kept");
 				return;
 			}
 		}
@@ -770,27 +753,9 @@ public static class Lessons
 				take = take,
 				savedAt = Time.time
 			};
-			using (List<(Rigidbody, Vector3)>.Enumerator enumerator2 = about.GetEnumerator())
+			foreach (var (rigidbody, vector) in about)
 			{
-				int moved;
-				int num6;
-				for (; enumerator2.MoveNext(); lesson.moved = moved + num6)
-				{
-					(Rigidbody, Vector3) current2 = enumerator2.Current;
-					Rigidbody item = current2.Item1;
-					Vector3 item2 = current2.Item2;
-					moved = lesson.moved;
-					if ((Object)(object)item != (Object)null)
-					{
-						val = item.worldCenterOfMass - item2;
-						if (((Vector3)(ref val)).magnitude > 0.5f)
-						{
-							num6 = 1;
-							continue;
-						}
-					}
-					num6 = 0;
-				}
+				lesson.moved += ((rigidbody != null && (rigidbody.worldCenterOfMass - vector).magnitude > 0.5f) ? 1 : 0);
 			}
 			lesson.harm = harmed;
 			try
@@ -812,9 +777,9 @@ public static class Lessons
 			{
 				Remove(list2[j]);
 			}
-			foreach (Bot item3 in BotManager.All)
+			foreach (Bot item in BotManager.All)
 			{
-				item3.LessonSoon();
+				item.LessonSoon();
 			}
 			string text2 = ((lesson.purpose == "climb") ? " to climb" : ((lesson.purpose == "portal") ? " to get somewhere" : ((lesson.purpose == "fight") ? " to fight" : ((lesson.purpose == "move") ? " to move things" : ""))));
 			Spawnables.Notify("Learned how you use the " + take.itemName + text2 + " (" + take.Length.ToString("0") + " s" + ((num > 0) ? (", " + num + " presses") : "") + ")");
@@ -874,7 +839,7 @@ public static class Lessons
 
 	public static void Litter(Poolee thing)
 	{
-		if (BotManager.OwnSpawns && (Object)(object)thing != (Object)null)
+		if (BotManager.OwnSpawns && thing != null)
 		{
 			litter.Add((thing, Time.time));
 		}
@@ -882,7 +847,7 @@ public static class Lessons
 
 	public static void Litter(Poolee thing, float after)
 	{
-		if (BotManager.OwnSpawns && (Object)(object)thing != (Object)null)
+		if (BotManager.OwnSpawns && thing != null)
 		{
 			litter.Add((thing, Time.time - Tuning.F("lesson.litter", 30f) + after));
 		}
@@ -898,8 +863,8 @@ public static class Lessons
 	{
 		for (int num = litter.Count - 1; num >= 0; num--)
 		{
-			var (val, num2) = litter[num];
-			if ((Object)(object)val == (Object)null)
+			var (poolee, num2) = litter[num];
+			if (poolee == null)
 			{
 				litter.RemoveAt(num);
 			}
@@ -909,17 +874,17 @@ public static class Lessons
 				try
 				{
 					bool flag = false;
-					foreach (Grip componentsInChild in ((Component)val).GetComponentsInChildren<Grip>())
+					foreach (Grip componentsInChild in poolee.GetComponentsInChildren<Grip>())
 					{
-						flag |= (Object)(object)componentsInChild != (Object)null && componentsInChild.attachedHands != null && componentsInChild.attachedHands.Count > 0;
+						flag |= componentsInChild != null && componentsInChild.attachedHands != null && componentsInChild.attachedHands.Count > 0;
 					}
-					foreach (Seat componentsInChild2 in ((Component)val).GetComponentsInChildren<Seat>(true))
+					foreach (Seat componentsInChild2 in poolee.GetComponentsInChildren<Seat>(includeInactive: true))
 					{
-						flag |= (Object)(object)componentsInChild2 != (Object)null && (Object)(object)componentsInChild2.rigManager != (Object)null;
+						flag |= componentsInChild2 != null && componentsInChild2.rigManager != null;
 					}
 					if (!flag)
 					{
-						val.Despawn();
+						poolee.Despawn();
 					}
 				}
 				catch (Exception)

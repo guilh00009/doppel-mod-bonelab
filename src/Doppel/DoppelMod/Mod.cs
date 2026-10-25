@@ -18,7 +18,7 @@ public class Mod : MelonMod
 		AssetFiles.Root = "Bot Player";
 		try
 		{
-			Entry.Start(Page.Root.CreatePage("Doppel", Color.cyan, 0, true));
+			Entry.Start(Page.Root.CreatePage("Doppel", Color.cyan));
 			started = true;
 			MelonLogger.Msg("Doppel ready (BoneMenu > Doppel)");
 		}

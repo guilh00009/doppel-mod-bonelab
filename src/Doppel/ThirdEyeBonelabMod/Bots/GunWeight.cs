@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Il2CppInterop.Runtime.InteropTypes;
 using Il2CppSLZ.Marrow;
 using Il2CppSLZ.Marrow.Interaction;
 using UnityEngine;
@@ -31,38 +30,38 @@ internal static class GunWeight
 	public static Transform RootOf(Component c)
 	{
 		MarrowEntity componentInParent = c.GetComponentInParent<MarrowEntity>();
-		if (!((Object)(object)componentInParent != (Object)null))
+		if (!(componentInParent != null))
 		{
 			return c.transform.root;
 		}
-		return ((Component)componentInParent).transform;
+		return componentInParent.transform;
 	}
 
 	public static void Lighten(Gun g)
 	{
 		try
 		{
-			if ((Object)(object)g == (Object)null)
+			if (g == null)
 			{
 				return;
 			}
-			Transform val = RootOf((Component)(object)g);
-			if (lightened.ContainsKey(((Il2CppObjectBase)(object)((Component)val).gameObject).Pointer))
+			Transform transform = RootOf(g);
+			if (lightened.ContainsKey(transform.gameObject.Pointer))
 			{
 				return;
 			}
 			float num = Tuning.F("hold.onehand.kg", 0.8f);
 			Was was = new Was
 			{
-				root = ((Component)val).gameObject,
-				name = ((Object)g).name,
+				root = transform.gameObject,
+				name = g.name,
 				bodies = new List<Rigidbody>(),
 				masses = new List<float>()
 			};
 			float num2 = 0f;
-			foreach (Rigidbody componentsInChild in ((Component)val).GetComponentsInChildren<Rigidbody>(true))
+			foreach (Rigidbody componentsInChild in transform.GetComponentsInChildren<Rigidbody>(includeInactive: true))
 			{
-				if (!((Object)(object)componentsInChild == (Object)null) && !componentsInChild.isKinematic && !((Object)componentsInChild).name.Contains("Tracker") && !((Object)(object)((Component)componentsInChild).GetComponentInParent<Magazine>() != (Object)null))
+				if (!(componentsInChild == null) && !componentsInChild.isKinematic && !componentsInChild.name.Contains("Tracker") && !(componentsInChild.GetComponentInParent<Magazine>() != null))
 				{
 					was.bodies.Add(componentsInChild);
 					was.masses.Add(componentsInChild.mass);
@@ -78,13 +77,13 @@ internal static class GunWeight
 			{
 				body.mass *= num3;
 			}
-			lightened[((Il2CppObjectBase)(object)((Component)val).gameObject).Pointer] = was;
+			lightened[transform.gameObject.Pointer] = was;
 			string text = "";
 			for (int i = 0; i < was.bodies.Count; i++)
 			{
-				text = text + ((i > 0) ? ", " : "") + ((Object)was.bodies[i]).name + " " + was.masses[i].ToString("0.00");
+				text = text + ((i > 0) ? ", " : "") + was.bodies[i].name + " " + was.masses[i].ToString("0.00");
 			}
-			Lab.Event("gun weight: " + ((Object)g).name + " " + num2.ToString("0.00") + " kg -> " + num.ToString("0.00") + " kg while a bot holds it (" + text + ")");
+			Lab.Event("gun weight: " + g.name + " " + num2.ToString("0.00") + " kg -> " + num.ToString("0.00") + " kg while a bot holds it (" + text + ")");
 		}
 		catch (Exception)
 		{
@@ -98,11 +97,11 @@ internal static class GunWeight
 			bool flag = false;
 			for (int i = 0; i < was.bodies.Count; i++)
 			{
-				Rigidbody val = was.bodies[i];
+				Rigidbody rigidbody = was.bodies[i];
 				float num = was.masses[i] * was.k;
-				if ((Object)(object)val != (Object)null && val.mass > num * 1.05f)
+				if (rigidbody != null && rigidbody.mass > num * 1.05f)
 				{
-					val.mass = num;
+					rigidbody.mass = num;
 					flag = true;
 				}
 			}
@@ -131,13 +130,13 @@ internal static class GunWeight
 			foreach (Gun item2 in item.GunsInHand())
 			{
 				Lighten(item2);
-				hashSet.Add(((Il2CppObjectBase)(object)((Component)RootOf((Component)(object)item2)).gameObject).Pointer);
+				hashSet.Add(RootOf(item2).gameObject.Pointer);
 			}
 		}
 		List<IntPtr> list = null;
 		foreach (KeyValuePair<IntPtr, Was> item3 in lightened)
 		{
-			if ((Object)(object)item3.Value.root != (Object)null && hashSet.Contains(item3.Key))
+			if (item3.Value.root != null && hashSet.Contains(item3.Key))
 			{
 				KeepLight(item3.Value);
 			}
@@ -156,14 +155,14 @@ internal static class GunWeight
 			lightened.Remove(item4);
 			try
 			{
-				if ((Object)(object)was.root == (Object)null)
+				if (was.root == null)
 				{
 					continue;
 				}
 				float num = 0f;
 				for (int i = 0; i < was.bodies.Count; i++)
 				{
-					if (!((Object)(object)was.bodies[i] == (Object)null))
+					if (!(was.bodies[i] == null))
 					{
 						was.bodies[i].mass = was.masses[i];
 						num += was.masses[i];

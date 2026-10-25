@@ -41,7 +41,7 @@ public class Personality
 	public Personality(int seed)
 	{
 		this.seed = seed;
-		Random r = new Random(seed);
+		System.Random r = new System.Random(seed);
 		favourites = R(0.3f, 0.6f);
 		mirror = ((r.NextDouble() < 0.25) ? R(0.7f, 0.9f) : R(0.1f, 0.4f));
 		tempo = R(0.9f, 1.1f);
@@ -63,17 +63,17 @@ public class Personality
 
 	public static Personality Of(RigManager rig)
 	{
-		Transform transform = ((Component)rig).transform;
+		Transform transform = rig.transform;
 		for (int i = 0; i < transform.childCount; i++)
 		{
-			string name = ((Object)transform.GetChild(i)).name;
+			string name = transform.GetChild(i).name;
 			if (name.StartsWith("BotSeed_", StringComparison.Ordinal) && int.TryParse(name.Substring("BotSeed_".Length), out var result))
 			{
 				return new Personality(result);
 			}
 		}
-		int num = Random.Range(1, int.MaxValue);
-		new GameObject("BotSeed_" + num).transform.SetParent(transform, false);
+		int num = UnityEngine.Random.Range(1, int.MaxValue);
+		new GameObject("BotSeed_" + num).transform.SetParent(transform, worldPositionStays: false);
 		return new Personality(num);
 	}
 
@@ -81,8 +81,8 @@ public class Personality
 	{
 		float num = Time.time / 150f + (float)(seed % 1000) / 1000f;
 		int num2 = Mathf.FloorToInt(num);
-		float num3 = Mathf.SmoothStep(0f, 1f, num - (float)num2);
-		return Mathf.Lerp(Taste(move, num2), Taste(move, num2 + 1), num3);
+		float t = Mathf.SmoothStep(0f, 1f, num - (float)num2);
+		return Mathf.Lerp(Taste(move, num2), Taste(move, num2 + 1), t);
 	}
 
 	private float Taste(string move, int era)

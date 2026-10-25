@@ -68,20 +68,19 @@ public static class PlayerWatch
 
 	public static void OnGunFired(Gun gun)
 	{
-		if ((Object)(object)gun == (Object)null || !HeldByPlayer(gun))
+		if (gun == null || !HeldByPlayer(gun))
 		{
 			return;
 		}
 		ShotsSeen += 1f;
 		float time = Time.time;
-		bool num = (int)gun.fireMode == 2;
+		bool num = gun.fireMode == Gun.FireMode.AUTOMATIC;
 		Transform firePointTransform = gun.firePointTransform;
-		if ((Object)(object)firePointTransform != (Object)null)
+		if (firePointTransform != null)
 		{
 			AimFrom = firePointTransform.position;
 			AimAlong = firePointTransform.forward;
-			RaycastHit val = default(RaycastHit);
-			ShotAt = (Physics.Raycast(firePointTransform.position, firePointTransform.forward, ref val, 80f, -1, (QueryTriggerInteraction)1) ? ((RaycastHit)(ref val)).point : (firePointTransform.position + firePointTransform.forward * 30f));
+			ShotAt = (Physics.Raycast(firePointTransform.position, firePointTransform.forward, out var hitInfo, 80f, -1, QueryTriggerInteraction.Ignore) ? hitInfo.point : (firePointTransform.position + firePointTransform.forward * 30f));
 		}
 		float num2 = time - lastShot;
 		if (num)
@@ -118,12 +117,12 @@ public static class PlayerWatch
 		_ = chooseAt;
 		chooseAt = Time.time + 0.5f;
 		Transform head = Player.Head;
-		if ((Object)(object)head == (Object)null)
+		if (head == null)
 		{
 			return;
 		}
 		Vector3 position = head.position;
-		bool flag = (Object)(object)gun != (Object)null;
+		bool flag = gun != null;
 		if (flag && !wasArmed)
 		{
 			armedSince = Time.time;
@@ -133,11 +132,9 @@ public static class PlayerWatch
 		int num2 = 0;
 		float num3 = 999f;
 		float num4 = 999f;
-		Vector3 val;
 		foreach (Targets.Target item in Targets.Hostiles())
 		{
-			val = item.Point - position;
-			float magnitude = ((Vector3)(ref val)).magnitude;
+			float magnitude = (item.Point - position).magnitude;
 			if (!(magnitude > 45f))
 			{
 				num2++;
@@ -158,18 +155,8 @@ public static class PlayerWatch
 		{
 			closeCallAt = Time.time;
 		}
-		float num5;
-		if (!(Time.time - placeBeforeAt < 1.5f))
-		{
-			num5 = 0f;
-		}
-		else
-		{
-			val = Flat(position - placeBefore);
-			num5 = ((Vector3)(ref val)).magnitude / Mathf.Max(Time.time - placeBeforeAt, 0.1f);
-		}
-		float num6 = num5;
-		float num7 = ((nearestBefore > 0f && flag2 && Time.time - nearestBeforeAt < 1.5f) ? ((num3 - nearestBefore) / Mathf.Max(Time.time - nearestBeforeAt, 0.1f)) : 0f);
+		float num5 = ((Time.time - placeBeforeAt < 1.5f) ? (Flat(position - placeBefore).magnitude / Mathf.Max(Time.time - placeBeforeAt, 0.1f)) : 0f);
+		float num6 = ((nearestBefore > 0f && flag2 && Time.time - nearestBeforeAt < 1.5f) ? ((num3 - nearestBefore) / Mathf.Max(Time.time - nearestBeforeAt, 0.1f)) : 0f);
 		placeBefore = position;
 		placeBeforeAt = Time.time;
 		nearestBefore = (flag2 ? num3 : (-1f));
@@ -197,7 +184,7 @@ public static class PlayerWatch
 		{
 			text = "TakeCover";
 		}
-		else if (flag2 && num3 < 7f && num7 > 0.6f)
+		else if (flag2 && num3 < 7f && num6 > 0.6f)
 		{
 			text = "Retreat";
 		}
@@ -205,15 +192,15 @@ public static class PlayerWatch
 		{
 			text = "ArmUp";
 		}
-		else if (!flag2 && Time.time - seenAt < 25f && num6 > 0.8f)
+		else if (!flag2 && Time.time - seenAt < 25f && num5 > 0.8f)
 		{
 			text = "Investigate";
 		}
-		else if (num2 == 0 && num6 > 0.8f)
+		else if (num2 == 0 && num5 > 0.8f)
 		{
 			text = "Explore";
 		}
-		else if (!flag2 && num6 < 0.3f)
+		else if (!flag2 && num5 < 0.3f)
 		{
 			text = "Idle";
 		}
@@ -231,7 +218,7 @@ public static class PlayerWatch
 	private static void Strafing()
 	{
 		Transform head = Player.Head;
-		if ((Object)(object)head == (Object)null || Time.time - FiredAt > 2f)
+		if (head == null || Time.time - FiredAt > 2f)
 		{
 			movedFromAt = 0f;
 			return;
@@ -245,25 +232,13 @@ public static class PlayerWatch
 			}
 			return;
 		}
-		Vector3 val = Flat(head.position - movedFrom) / (Time.time - movedFromAt);
+		Vector3 vector = Flat(head.position - movedFrom) / (Time.time - movedFromAt);
 		movedFrom = head.position;
 		movedFromAt = Time.time;
-		if (!(((Vector3)(ref val)).magnitude < 0.5f))
+		if (!(vector.magnitude < 0.5f))
 		{
-			Vector3 val2 = Flat(AimAlong);
-			Vector3 normalized;
-			if (!(((Vector3)(ref val2)).sqrMagnitude > 0.01f))
-			{
-				val2 = Flat(head.forward);
-				normalized = ((Vector3)(ref val2)).normalized;
-			}
-			else
-			{
-				val2 = Flat(AimAlong);
-				normalized = ((Vector3)(ref val2)).normalized;
-			}
-			Vector3 val3 = normalized;
-			float num = Mathf.Abs(Vector3.Dot(((Vector3)(ref val)).normalized, Vector3.Cross(Vector3.up, val3)));
+			Vector3 rhs = ((Flat(AimAlong).sqrMagnitude > 0.01f) ? Flat(AimAlong).normalized : Flat(head.forward).normalized);
+			float num = Mathf.Abs(Vector3.Dot(vector.normalized, Vector3.Cross(Vector3.up, rhs)));
 			Knowledge.Style.Add(Knowledge.Style.strafe, (num > 0.6f) ? 1f : 0f);
 		}
 	}
@@ -281,16 +256,16 @@ public static class PlayerWatch
 			Choose(HeldGun());
 		}
 		Strafing();
-		Gun val = HeldGun();
-		if ((Object)(object)val != (Object)(object)watchedGun)
+		Gun gun = HeldGun();
+		if (gun != watchedGun)
 		{
-			watchedGun = val;
-			hadMagazine = (Object)(object)val != (Object)null && SafeHasMagazine(val);
-			lastAmmoFraction = (((Object)(object)val != (Object)null) ? AmmoFraction(val) : 1f);
+			watchedGun = gun;
+			hadMagazine = gun != null && SafeHasMagazine(gun);
+			lastAmmoFraction = ((gun != null) ? AmmoFraction(gun) : 1f);
 		}
-		else if ((Object)(object)val != (Object)null)
+		else if (gun != null)
 		{
-			bool flag = SafeHasMagazine(val);
+			bool flag = SafeHasMagazine(gun);
 			if (hadMagazine && !flag && lastAmmoFraction < 0.95f)
 			{
 				Knowledge.Style.Add(Knowledge.Style.reloadAt, lastAmmoFraction);
@@ -298,7 +273,7 @@ public static class PlayerWatch
 			hadMagazine = flag;
 			if (flag)
 			{
-				lastAmmoFraction = AmmoFraction(val);
+				lastAmmoFraction = AmmoFraction(gun);
 			}
 		}
 		if (Time.time < sampleAt)
@@ -307,7 +282,7 @@ public static class PlayerWatch
 		}
 		sampleAt = Time.time + 0.5f;
 		Transform head = Player.Head;
-		if ((Object)(object)head == (Object)null || (Object)(object)val == (Object)null || !Fighting)
+		if (head == null || gun == null || !Fighting)
 		{
 			lastNearDistance = -1f;
 			return;
@@ -315,9 +290,7 @@ public static class PlayerWatch
 		float num = float.MaxValue;
 		foreach (Targets.Target item in Targets.Hostiles())
 		{
-			float num2 = num;
-			Vector3 val2 = item.Point - head.position;
-			num = Mathf.Min(num2, ((Vector3)(ref val2)).magnitude);
+			num = Mathf.Min(num, (item.Point - head.position).magnitude);
 		}
 		if (num > 60f)
 		{
@@ -327,8 +300,8 @@ public static class PlayerWatch
 		Knowledge.Style.Add(Knowledge.Style.fightDistance, num);
 		if (lastNearDistance > 0f && num < 6f)
 		{
-			float num3 = num - lastNearDistance;
-			Knowledge.Style.Add(Knowledge.Style.giveGround, (num3 > 0.1f) ? 1f : 0f);
+			float num2 = num - lastNearDistance;
+			Knowledge.Style.Add(Knowledge.Style.giveGround, (num2 > 0.1f) ? 1f : 0f);
 		}
 		lastNearDistance = num;
 	}
@@ -336,7 +309,7 @@ public static class PlayerWatch
 	private static Gun HeldGun()
 	{
 		Gun componentInHand = Player.GetComponentInHand<Gun>(Player.RightHand);
-		if (!((Object)(object)componentInHand != (Object)null))
+		if (!(componentInHand != null))
 		{
 			return Player.GetComponentInHand<Gun>(Player.LeftHand);
 		}
@@ -346,18 +319,18 @@ public static class PlayerWatch
 	private static bool HeldByPlayer(Gun gun)
 	{
 		Grip triggerGrip = gun.triggerGrip;
-		if ((Object)(object)triggerGrip == (Object)null || triggerGrip.attachedHands == null)
+		if (triggerGrip == null || triggerGrip.attachedHands == null)
 		{
 			return false;
 		}
-		Hand[] array = (Hand[])(object)new Hand[2]
+		Hand[] array = new Hand[2]
 		{
 			Player.LeftHand,
 			Player.RightHand
 		};
-		foreach (Hand val in array)
+		foreach (Hand hand in array)
 		{
-			if ((Object)(object)val != (Object)null && triggerGrip.attachedHands.Contains(val))
+			if (hand != null && triggerGrip.attachedHands.Contains(hand))
 			{
 				return true;
 			}
@@ -381,7 +354,7 @@ public static class PlayerWatch
 	{
 		try
 		{
-			int num = (((Object)(object)gun.defaultMagazine != (Object)null) ? Mathf.Max(1, gun.defaultMagazine.rounds) : 15);
+			int num = ((gun.defaultMagazine != null) ? Mathf.Max(1, gun.defaultMagazine.rounds) : 15);
 			return Mathf.Clamp01((float)gun.AmmoCount() / (float)num);
 		}
 		catch (Exception)
