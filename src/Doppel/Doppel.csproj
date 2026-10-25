@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Decompiled from Doppel 1.4.0 (Rudyhill_team). Point BonelabPath at your BONELAB install
+       (MelonLoader 0.7.3 installed and the game run once so Il2CppAssemblies exist), e.g.
+       dotnet build -p:BonelabPath="C:\Program Files (x86)\Steam\steamapps\common\BONELAB" -->
+  <PropertyGroup>
+    <AssemblyName>Doppel</AssemblyName>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>11.0</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <Nullable>disable</Nullable>
+    <BonelabPath Condition="'$(BonelabPath)' == ''">C:\Program Files (x86)\Steam\steamapps\common\BONELAB</BonelabPath>
+    <MLNet6>$(BonelabPath)\MelonLoader\net6</MLNet6>
+    <Il2CppAsm>$(BonelabPath)\MelonLoader\Il2CppAssemblies</Il2CppAsm>
+    <ModsDir>$(BonelabPath)\Mods</ModsDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Reference>
+      <Private>False</Private>
+    </Reference>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <Reference Include="MelonLoader"><HintPath>$(MLNet6)\MelonLoader.dll</HintPath></Reference>
+    <Reference Include="0Harmony"><HintPath>$(MLNet6)\0Harmony.dll</HintPath></Reference>
+    <Reference Include="Il2CppInterop.Runtime"><HintPath>$(MLNet6)\Il2CppInterop.Runtime.dll</HintPath></Reference>
+    <Reference Include="BoneLib"><HintPath>$(ModsDir)\BoneLib.dll</HintPath></Reference>
+    <!-- Optional at runtime: only FusionLink.cs uses it. -->
+    <Reference Include="LabFusion"><HintPath>$(ModsDir)\LabFusion.dll</HintPath></Reference>
+    <Reference Include="Assembly-CSharp"><HintPath>$(Il2CppAsm)\Assembly-CSharp.dll</HintPath></Reference>
+    <Reference Include="Il2CppSLZ.Marrow"><HintPath>$(Il2CppAsm)\Il2CppSLZ.Marrow.dll</HintPath></Reference>
+    <Reference Include="Il2Cppmscorlib"><HintPath>$(Il2CppAsm)\Il2Cppmscorlib.dll</HintPath></Reference>
+    <Reference Include="Il2CppUniTask"><HintPath>$(Il2CppAsm)\Il2CppUniTask.dll</HintPath></Reference>
+    <Reference Include="Portals"><HintPath>$(Il2CppAsm)\Portals.dll</HintPath></Reference>
+    <Reference Include="Unity.TextMeshPro"><HintPath>$(Il2CppAsm)\Unity.TextMeshPro.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(Il2CppAsm)\UnityEngine.CoreModule.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.PhysicsModule"><HintPath>$(Il2CppAsm)\UnityEngine.PhysicsModule.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.AIModule"><HintPath>$(Il2CppAsm)\UnityEngine.AIModule.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.AudioModule"><HintPath>$(Il2CppAsm)\UnityEngine.AudioModule.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.AnimationModule"><HintPath>$(Il2CppAsm)\UnityEngine.AnimationModule.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.UI"><HintPath>$(Il2CppAsm)\UnityEngine.UI.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.ImageConversionModule"><HintPath>$(Il2CppAsm)\UnityEngine.ImageConversionModule.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>
